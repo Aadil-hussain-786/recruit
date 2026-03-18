@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  RECRUITER
+  HIRING_MANAGER
+  INTERVIEWER
+}
+
+enum Plan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum JobStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  ARCHIVED
+}
+
+enum ApplicationStage {
+  APPLIED
+  SCREENING
+  INTERVIEW
+  OFFER
+  HIRED
+  REJECTED
+}
+
+model Organization {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  domain    String?
+  plan      Plan     @default(FREE)
+  settings  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users        User[]
+  jobs         Job[]
+  applications Application[]
+  interviews   Interview[]
+
+  @@map("organizations")
+}
+
+model User {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  email           String   @unique
+  password        String
+  firstName       String
+  lastName        String
+  role            Role     @default(RECRUITER)
+  organizationId  String   @db.ObjectId
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  isEmailVerified Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  interviews Interview[]
+
+  @@map("users")
+}
+
+model Job {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  description     String
+  status          JobStatus @default(DRAFT)
+  organizationId  String   @db.ObjectId
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  embedding       Json?     // Semantic embedding of JD requirements
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  applications Application[]
+
+  @@map("jobs")
+}
+
+model Application {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  jobId           String   @db.ObjectId
+  job             Job      @relation(fields: [jobId], references: [id])
+  candidateId     String   @db.ObjectId
+  stage           ApplicationStage @default(APPLIED)
+  organizationId  String   @db.ObjectId
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  interviews Interview[]
+
+  @@map("applications")
+}
+
+model Interview {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  applicationId   String   @db.ObjectId
+  application     Application @relation(fields: [applicationId], references: [id])
+  interviewerId   String   @db.ObjectId
+  interviewer     User      @relation(fields: [interviewerId], references: [id])
+  organizationId  String   @db.ObjectId
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  scheduledAt     DateTime
+  duration        Int
+  status          String    @default("SCHEDULED")
+  meetingLink     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("interviews")
+}

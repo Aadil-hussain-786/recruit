@@ -1,0 +1,59 @@
+// Resume Upload Feature Schema
+// Add this to your main schema.prisma file
+
+model UploadedResume {
+  id                String   @id @default(uuid())
+  userId            String   @db.ObjectId
+  fileName          String
+  fileSize          Int
+  format            String   // pdf, doc, docx, txt
+  mimeType          String
+  encryptedContent  Bytes?   // AES-256 encrypted file content
+  textContent       String?  // Extracted text content
+  status            String   @default("pending") // pending, processing, completed, failed, cancelled
+  expiresAt         DateTime
+  
+  // Processing result
+  overallMatchScore Int?
+  matchedQualifications String[]
+  missingQualifications String[]
+  recommendations       String[]
+  processedAt           DateTime?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Indexes
+  @@index([userId])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([userId, status])
+}
+
+model ResumeJobAssociation {
+  id              String   @id @default(uuid())
+  resumeId        String   @db.ObjectId
+  jobDescriptionId String  @db.ObjectId
+  matchScore      Int?
+  createdAt       DateTime @default(now())
+
+  @@unique([resumeId, jobDescriptionId])
+  @@index([jobDescriptionId])
+}
+
+model UploadSession {
+  id              String   @id @default(uuid())
+  userId          String   @db.ObjectId
+  status          String   @default("active") // active, completed, cancelled, expired
+  jobDescriptionId String? @db.ObjectId
+  resumeIds       String[]
+  createdAt       DateTime @default(now())
+  expiresAt       DateTime
+  completedAt     DateTime?
+
+  // Indexes
+  @@index([userId])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([userId, status])
+}
