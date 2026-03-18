@@ -1,0 +1,20 @@
+node_modules/
+.env
+.env.*
+dist/
+build/
+.next/
+out/
+*.log
+*.tmp
+.DS_Store
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Project specific
+backend/data/
+backend/node_modules/
+frontend/node_modules/
+frontend/.next/
+Videos/
