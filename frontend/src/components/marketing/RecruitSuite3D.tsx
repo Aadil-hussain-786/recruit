@@ -21,7 +21,7 @@ const chapters = [
 ];
 
 function ParticleField({ scrollProgress }: { scrollProgress: React.MutableRefObject<number> }) {
-  const count = 500;
+  const count = 300; // Reduced count for cleaner look
   const mesh = useRef<THREE.Points>(null);
   const hoverTarget = useRef(new THREE.Vector3());
   
@@ -29,7 +29,8 @@ function ParticleField({ scrollProgress }: { scrollProgress: React.MutableRefObj
     const temp = new Float32Array(count * 3);
     const initial = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-        const r = 10 + Math.random() * 40;
+        // Create a more structured globe-like distribution
+        const r = 15; // Fixed radius for globe shape
         const theta = Math.random() * Math.PI * 2;
         const phi = Math.acos((Math.random() * 2) - 1);
         
@@ -65,44 +66,102 @@ function ParticleField({ scrollProgress }: { scrollProgress: React.MutableRefObj
         let y = initialPositions[iy];
         let z = initialPositions[iz];
         
-        // Add scroll displacement
-        const swirlX = Math.sin(time * 0.1 + y * 0.05) * p * 10;
-        const swirlZ = Math.cos(time * 0.1 + x * 0.05) * p * 10;
+        // Gentle rotation for globe effect
+        const rotatedX = x * Math.cos(time * 0.05) - z * Math.sin(time * 0.05);
+        const rotatedZ = x * Math.sin(time * 0.05) + z * Math.cos(time * 0.05);
         
         // Add mouse repulsion
-        const dx = (x + swirlX) - hoverTarget.current.x;
-        const dy = (y) - hoverTarget.current.y;
-        const dz = (z + swirlZ) - hoverTarget.current.z;
+        const dx = rotatedX - hoverTarget.current.x;
+        const dy = y - hoverTarget.current.y;
+        const dz = rotatedZ - hoverTarget.current.z;
         const distSq = dx*dx + dy*dy + dz*dz;
         
         let repelX = 0, repelY = 0, repelZ = 0;
         if (distSq < 25) {
             const force = (25 - distSq) / 25;
-            repelX = dx * force * 0.5;
-            repelY = dy * force * 0.5;
-            repelZ = dz * force * 0.5;
+            repelX = dx * force * 0.3;
+            repelY = dy * force * 0.3;
+            repelZ = dz * force * 0.3;
         }
 
-        positionsAttr.setXYZ(i, x + swirlX + repelX, y + repelY, z + swirlZ + repelZ);
+        positionsAttr.setXYZ(i, rotatedX + repelX, y + repelY, rotatedZ + repelZ);
     }
     positionsAttr.needsUpdate = true;
     
-    mesh.current.rotation.y = time * 0.05 + p * 2;
-    mesh.current.rotation.x = p * 0.5;
+    mesh.current.rotation.y = time * 0.02 + p * 0.5; // Slower, more elegant rotation
   });
 
   return (
     <Points ref={mesh} positions={positions} stride={3} frustumCulled={false}>
       <PointMaterial
         transparent
-        color="#88ccff"
-        size={0.08}
+        color="#ffffff" // Changed to white for cleaner look
+        size={0.05}
         sizeAttenuation={true}
         depthWrite={false}
-        opacity={0.6}
+        opacity={0.4} // Reduced opacity
         blending={THREE.AdditiveBlending}
       />
     </Points>
+  );
+}
+
+function GlobeLines({ scrollProgress }: { scrollProgress: React.MutableRefObject<number> }) {
+  const linesRef = useRef<THREE.Group>(null);
+  
+  useFrame((state) => {
+    if (!linesRef.current) return;
+    const time = state.clock.elapsedTime;
+    linesRef.current.rotation.y = time * 0.02; // Slow rotation
+  });
+
+  const radius = 15;
+  const lines = [];
+
+  // Meridians (longitude lines)
+  for (let i = 0; i < 12; i++) {
+    const phi = (i / 12) * Math.PI * 2;
+    const points = [];
+    for (let j = 0; j <= 50; j++) {
+      const theta = (j / 50) * Math.PI;
+      const x = radius * Math.sin(theta) * Math.cos(phi);
+      const y = radius * Math.sin(theta) * Math.sin(phi);
+      const z = radius * Math.cos(theta);
+      points.push(new THREE.Vector3(x, y, z));
+    }
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    lines.push(
+      <line key={`meridian-${i}`}>
+        <bufferGeometry attach="geometry" {...geometry} />
+        <lineBasicMaterial attach="material" color="#ffffff" opacity={0.2} transparent />
+      </line>
+    );
+  }
+
+  // Parallels (latitude lines)
+  for (let i = 1; i < 6; i++) {
+    const theta = (i / 6) * Math.PI;
+    const points = [];
+    for (let j = 0; j <= 100; j++) {
+      const phi = (j / 100) * Math.PI * 2;
+      const x = radius * Math.sin(theta) * Math.cos(phi);
+      const y = radius * Math.sin(theta) * Math.sin(phi);
+      const z = radius * Math.cos(theta);
+      points.push(new THREE.Vector3(x, y, z));
+    }
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    lines.push(
+      <line key={`parallel-${i}`}>
+        <bufferGeometry attach="geometry" {...geometry} />
+        <lineBasicMaterial attach="material" color="#ffffff" opacity={0.15} transparent />
+      </line>
+    );
+  }
+
+  return (
+    <group ref={linesRef}>
+      {lines}
+    </group>
   );
 }
 
@@ -330,6 +389,7 @@ function AdvancedScene({ scrollProgress }: { scrollProgress: React.MutableRefObj
         <>
             <CameraController scrollProgress={scrollProgress} />
             <ParticleField scrollProgress={scrollProgress} />
+            <GlobeLines scrollProgress={scrollProgress} />
             <NeuralCore scrollProgress={scrollProgress} />
             <FloatingNodes scrollProgress={scrollProgress} />
             

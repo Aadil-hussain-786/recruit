@@ -11,8 +11,7 @@ import {
     Cpu as CpuIcon, 
     Shield as ShieldIcon, 
     Terminal as TerminalIcon, 
-    Zap as ZapIcon, 
-    Globe as GlobeIcon 
+    Zap as ZapIcon
 } from "lucide-react";
 import Footer from "@/components/layout/Footer";
 const RecruitSuite3D = dynamic(() => import('@/components/marketing/RecruitSuite3D'), { ssr: false });
