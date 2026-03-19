@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import dynamic from 'next/dynamic';
 import { 
     ArrowRight,
     Menu,
@@ -14,7 +15,7 @@ import {
     Globe as GlobeIcon 
 } from "lucide-react";
 import Footer from "@/components/layout/Footer";
-import RecruitSuite3D from "@/components/marketing/RecruitSuite3D";
+const RecruitSuite3D = dynamic(() => import('@/components/marketing/RecruitSuite3D'), { ssr: false });
 
 // --- Writing Style Component ---
 const TypingEffect = ({ text, delay = 0 }: { text: string, delay?: number }) => {
@@ -201,9 +202,17 @@ export default function Home() {
                         className="flex flex-col sm:flex-row items-center justify-center gap-8"
                     >
                         <Link href="/register">
-                            <button className="bg-slate-900 text-white text-[12px] font-black uppercase tracking-[0.2em] px-12 py-6 hover:bg-accent-cyan hover:scale-105 active:scale-95 transition-all shadow-[0_10px_25px_-5px_rgba(15,23,42,0.15)] flex items-center gap-4">
+                            <motion.button 
+                                className="bg-slate-900 text-white text-[12px] font-black uppercase tracking-[0.2em] px-12 py-6 hover:bg-accent-cyan hover:scale-105 active:scale-95 transition-all shadow-[0_10px_25px_-5px_rgba(15,23,42,0.15)] flex items-center gap-4"
+                                whileHover={{ 
+                                    scale: 1.05, 
+                                    boxShadow: "0 20px 40px -10px rgba(15,23,42,0.3)",
+                                    transition: { duration: 0.2 }
+                                }}
+                                whileTap={{ scale: 0.98 }}
+                            >
                                 LAUNCH ENGINE <ArrowRight size={18} />
-                            </button>
+                            </motion.button>
                         </Link>
                         <Link href="/about" className="group flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors">
                             <span className="w-8 h-[1px] bg-slate-200 group-hover:w-12 transition-all" /> SYSTEM_OVERVIEW
@@ -230,7 +239,9 @@ export default function Home() {
             </section>
 
             {/* Immersive 3D Experience */}
-            <RecruitSuite3D />
+            <Suspense fallback={<div className="h-[50vh]" />}>
+                <RecruitSuite3D />
+            </Suspense>
 
             {/* Big Background Text - Kept for footer transition */}
             <section className="h-[50vh] flex items-center justify-center pointer-events-none">

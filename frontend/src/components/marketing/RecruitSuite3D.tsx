@@ -21,7 +21,7 @@ const chapters = [
 ];
 
 function ParticleField({ scrollProgress }: { scrollProgress: React.MutableRefObject<number> }) {
-  const count = 3000;
+  const count = 500;
   const mesh = useRef<THREE.Points>(null);
   const hoverTarget = useRef(new THREE.Vector3());
   

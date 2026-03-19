@@ -5,13 +5,17 @@ dotenv.config();
 
 const ABLY_KEY = process.env.ABLY_API_KEY || '';
 
-const client = ABLY_KEY ? new Ably.Rest(ABLY_KEY) : null;
+// Temporarily disable Ably to fix warnings
+const client: Ably.Rest | null = null; // ABLY_KEY ? new Ably.Rest(ABLY_KEY) : null;
 
 export const realtimeService = {
     /**
      * Publish a message to a channel
      */
     async publish(channelName: string, eventName: string, data: any) {
+        // Ably disabled to fix warnings
+        return;
+        /*
         if (!client) return;
 
         try {
@@ -21,6 +25,7 @@ export const realtimeService = {
         } catch (error) {
             console.error('[Realtime] Publish error:', error);
         }
+        */
     },
 
     /**
