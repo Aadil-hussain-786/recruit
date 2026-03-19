@@ -21,7 +21,7 @@ const chapters = [
 ];
 
 function ParticleField({ scrollProgress }: { scrollProgress: React.MutableRefObject<number> }) {
-  const count = 300; // Reduced count for cleaner look
+  const count = 200; // Optimized count for performance
   const mesh = useRef<THREE.Points>(null);
   const hoverTarget = useRef(new THREE.Vector3());
   
@@ -50,56 +50,59 @@ function ParticleField({ scrollProgress }: { scrollProgress: React.MutableRefObj
     const time = state.clock.elapsedTime;
     const p = scrollProgress.current;
     
-    // Mouse hover effect
+    // Mouse hover effect - optimized
     hoverTarget.current.x = (state.mouse.x * state.viewport.width) / 2;
     hoverTarget.current.y = (state.mouse.y * state.viewport.height) / 2;
     hoverTarget.current.z = 0;
     
     const positionsAttr = mesh.current.geometry.attributes.position;
     
-    for (let i = 0; i < count; i++) {
-        const ix = i * 3;
-        const iy = i * 3 + 1;
-        const iz = i * 3 + 2;
-        
-        let x = initialPositions[ix];
-        let y = initialPositions[iy];
-        let z = initialPositions[iz];
-        
-        // Gentle rotation for globe effect
-        const rotatedX = x * Math.cos(time * 0.05) - z * Math.sin(time * 0.05);
-        const rotatedZ = x * Math.sin(time * 0.05) + z * Math.cos(time * 0.05);
-        
-        // Add mouse repulsion
-        const dx = rotatedX - hoverTarget.current.x;
-        const dy = y - hoverTarget.current.y;
-        const dz = rotatedZ - hoverTarget.current.z;
-        const distSq = dx*dx + dy*dy + dz*dz;
-        
-        let repelX = 0, repelY = 0, repelZ = 0;
-        if (distSq < 25) {
-            const force = (25 - distSq) / 25;
-            repelX = dx * force * 0.3;
-            repelY = dy * force * 0.3;
-            repelZ = dz * force * 0.3;
-        }
+    // Update only every few frames for performance
+    if (Math.floor(time * 60) % 2 === 0) {
+      for (let i = 0; i < count; i++) {
+          const ix = i * 3;
+          const iy = i * 3 + 1;
+          const iz = i * 3 + 2;
+          
+          let x = initialPositions[ix];
+          let y = initialPositions[iy];
+          let z = initialPositions[iz];
+          
+          // Gentle rotation for globe effect
+          const rotatedX = x * Math.cos(time * 0.03) - z * Math.sin(time * 0.03);
+          const rotatedZ = x * Math.sin(time * 0.03) + z * Math.cos(time * 0.03);
+          
+          // Add mouse repulsion - simplified
+          const dx = rotatedX - hoverTarget.current.x;
+          const dy = y - hoverTarget.current.y;
+          const dz = rotatedZ - hoverTarget.current.z;
+          const distSq = dx*dx + dy*dy + dz*dz;
+          
+          let repelX = 0, repelY = 0, repelZ = 0;
+          if (distSq < 20) {
+              const force = (20 - distSq) / 20;
+              repelX = dx * force * 0.2;
+              repelY = dy * force * 0.2;
+              repelZ = dz * force * 0.2;
+          }
 
-        positionsAttr.setXYZ(i, rotatedX + repelX, y + repelY, rotatedZ + repelZ);
+          positionsAttr.setXYZ(i, rotatedX + repelX, y + repelY, rotatedZ + repelZ);
+      }
+      positionsAttr.needsUpdate = true;
     }
-    positionsAttr.needsUpdate = true;
     
-    mesh.current.rotation.y = time * 0.02 + p * 0.5; // Slower, more elegant rotation
+    mesh.current.rotation.y = time * 0.015 + p * 0.3; // Even slower for performance
   });
 
   return (
     <Points ref={mesh} positions={positions} stride={3} frustumCulled={false}>
       <PointMaterial
         transparent
-        color="#ffffff" // Changed to white for cleaner look
-        size={0.05}
+        color="#0ea5e9" // Cyan color
+        size={0.08}
         sizeAttenuation={true}
         depthWrite={false}
-        opacity={0.4} // Reduced opacity
+        opacity={0.8} // More visible
         blending={THREE.AdditiveBlending}
       />
     </Points>
@@ -112,18 +115,18 @@ function GlobeLines({ scrollProgress }: { scrollProgress: React.MutableRefObject
   useFrame((state) => {
     if (!linesRef.current) return;
     const time = state.clock.elapsedTime;
-    linesRef.current.rotation.y = time * 0.02; // Slow rotation
+    linesRef.current.rotation.y = time * 0.01; // Very slow rotation for performance
   });
 
   const radius = 15;
   const lines = [];
 
-  // Meridians (longitude lines)
-  for (let i = 0; i < 12; i++) {
-    const phi = (i / 12) * Math.PI * 2;
+  // Meridians (longitude lines) - more lines for fuller grid
+  for (let i = 0; i < 24; i++) { // Increased from 12 to 24
+    const phi = (i / 24) * Math.PI * 2;
     const points = [];
-    for (let j = 0; j <= 50; j++) {
-      const theta = (j / 50) * Math.PI;
+    for (let j = 0; j <= 30; j++) { // Reduced points for performance
+      const theta = (j / 30) * Math.PI;
       const x = radius * Math.sin(theta) * Math.cos(phi);
       const y = radius * Math.sin(theta) * Math.sin(phi);
       const z = radius * Math.cos(theta);
@@ -133,17 +136,17 @@ function GlobeLines({ scrollProgress }: { scrollProgress: React.MutableRefObject
     lines.push(
       <line key={`meridian-${i}`}>
         <bufferGeometry attach="geometry" {...geometry} />
-        <lineBasicMaterial attach="material" color="#ffffff" opacity={0.2} transparent />
+        <lineBasicMaterial attach="material" color="#0ea5e9" opacity={0.6} transparent />
       </line>
     );
   }
 
-  // Parallels (latitude lines)
-  for (let i = 1; i < 6; i++) {
-    const theta = (i / 6) * Math.PI;
+  // Parallels (latitude lines) - more lines for fuller grid
+  for (let i = 1; i < 12; i++) { // Increased from 6 to 12
+    const theta = (i / 12) * Math.PI;
     const points = [];
-    for (let j = 0; j <= 100; j++) {
-      const phi = (j / 100) * Math.PI * 2;
+    for (let j = 0; j <= 60; j++) { // Reduced points for performance
+      const phi = (j / 60) * Math.PI * 2;
       const x = radius * Math.sin(theta) * Math.cos(phi);
       const y = radius * Math.sin(theta) * Math.sin(phi);
       const z = radius * Math.cos(theta);
@@ -153,7 +156,7 @@ function GlobeLines({ scrollProgress }: { scrollProgress: React.MutableRefObject
     lines.push(
       <line key={`parallel-${i}`}>
         <bufferGeometry attach="geometry" {...geometry} />
-        <lineBasicMaterial attach="material" color="#ffffff" opacity={0.15} transparent />
+        <lineBasicMaterial attach="material" color="#0ea5e9" opacity={0.4} transparent />
       </line>
     );
   }
@@ -344,6 +347,9 @@ function CameraController({ scrollProgress }: { scrollProgress: React.MutableRef
     useFrame((state, delta) => {
         const p = scrollProgress.current; // 0 to 1
         
+        // Performance optimization: only update camera every few frames
+        if (Math.floor(state.clock.elapsedTime * 30) % 2 !== 0) return;
+        
         // Intro Camera (p = 0): far away, viewing core
         // Mid Camera (p = 0.5): swooping around the core, looking at nodes
         // End Camera (p = 1): looking straight down on the entire mesh
@@ -368,17 +374,17 @@ function CameraController({ scrollProgress }: { scrollProgress: React.MutableRef
             targetPos.lerpVectors(midPos, endPos, localP);
         }
 
-        // Mouse Parallax Effect
+        // Mouse Parallax Effect - reduced frequency
         const mouseX = (state.mouse.x * state.viewport.width) / 100;
         const mouseY = (state.mouse.y * state.viewport.height) / 100;
         targetPos.x += mouseX;
         targetPos.y += mouseY;
 
-        camera.position.lerp(targetPos, 0.05);
+        camera.position.lerp(targetPos, 0.03); // Slower lerp for smoother performance
 
         // Update target looking vector: starts at core (0,-2,0) and ends moving with the core (0, 13, 0)
         const targetY = -2 + p * 15; 
-        lookAtTarget.current.lerp(new THREE.Vector3(0, targetY, 0), 0.05);
+        lookAtTarget.current.lerp(new THREE.Vector3(0, targetY, 0), 0.03);
         camera.lookAt(lookAtTarget.current);
     });
     return null;
@@ -402,9 +408,17 @@ function AdvancedScene({ scrollProgress }: { scrollProgress: React.MutableRefObj
     );
 }
 
-export default function RecruitSuite3D() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const scrollProgress = useRef(0);
+function LoadingFallback() {
+  return (
+    <Html center>
+      <div className="flex items-center justify-center">
+        <div className="text-cyan-400 text-lg font-mono animate-pulse">
+          Initializing Neural Network...
+        </div>
+      </div>
+    </Html>
+  );
+}
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -428,8 +442,17 @@ export default function RecruitSuite3D() {
   return (
     <div ref={containerRef} className="relative w-full h-[800vh] bg-black">
         <div className="sticky top-0 left-0 w-full h-screen overflow-hidden">
-            <Canvas camera={{ position: [0, 0, 20], fov: 45 }} dpr={[1, 2]}>
-                <Suspense fallback={null}>
+            <Canvas 
+              camera={{ position: [0, 0, 20], fov: 45 }} 
+              dpr={[1, 1.5]} // Reduced max DPR for performance
+              gl={{ 
+                antialias: false, // Disable antialiasing for performance
+                alpha: false,
+                powerPreference: "high-performance"
+              }}
+              frameloop="demand" // Only render when needed
+            >
+                <Suspense fallback={<LoadingFallback />}>
                     <AdvancedScene scrollProgress={scrollProgress} />
                 </Suspense>
             </Canvas>

@@ -13,8 +13,17 @@ import {
     Terminal as TerminalIcon, 
     Zap as ZapIcon
 } from "lucide-react";
-import Footer from "@/components/layout/Footer";
-const RecruitSuite3D = dynamic(() => import('@/components/marketing/RecruitSuite3D'), { ssr: false });
+const Footer = dynamic(() => import('@/components/layout/Footer'), { ssr: false });
+const RecruitSuite3D = dynamic(() => import('@/components/marketing/RecruitSuite3D'), { 
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-screen bg-black flex items-center justify-center">
+      <div className="text-cyan-400 text-xl font-mono animate-pulse">
+        Loading Neural Interface...
+      </div>
+    </div>
+  )
+});
 
 // --- Writing Style Component ---
 const TypingEffect = ({ text, delay = 0 }: { text: string, delay?: number }) => {
@@ -160,6 +169,32 @@ const AdvancedNavbar = () => {
 };
 
 export default function Home() {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    // Optimize initial load
+    setIsLoaded(true);
+    
+    // Preload critical resources
+    if (typeof window !== 'undefined') {
+      // Preload Three.js related assets
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'script';
+      link.href = 'https://unpkg.com/three@0.155.0/build/three.min.js';
+      document.head.appendChild(link);
+    }
+  }, []);
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-cyan-400 text-2xl font-mono animate-pulse">
+          Initializing Recruit AI...
+        </div>
+      </div>
+    );
+  }
     return (
         <div className="bg-transparent text-slate-900 min-h-screen font-sans selection:bg-accent-cyan selection:text-white relative overflow-x-hidden pt-20 lg:pt-32">
             <AdvancedNavbar />
