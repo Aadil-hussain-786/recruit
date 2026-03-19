@@ -48,6 +48,45 @@
 
 body {
   background: var(--background);
+  /* Mobile performance optimizations */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* Prevent zoom on input focus on iOS */
+  -webkit-text-size-adjust: 100%;
+  /* Improve scrolling on mobile */
+  -webkit-overflow-scrolling: touch;
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  * {
+    /* Disable hover effects on touch devices */
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Optimize transforms for mobile GPUs */
+  .animate-float,
+  .animate-glow {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+  
+  /* Reduce motion on mobile for performance */
+  .animate-pulse {
+    animation-duration: 3s;
+  }
+}
+
+body {
   color: var(--foreground);
   font-family: var(--font-plus-jakarta), sans-serif;
   overflow-x: hidden;

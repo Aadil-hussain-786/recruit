@@ -20,8 +20,8 @@ const chapters = [
   { id: "06", title: "Match Sync", desc: "Perfect alignment", color: "#f59e0b" }
 ];
 
-function ParticleField({ scrollProgress }: { scrollProgress: React.MutableRefObject<number> }) {
-  const count = 200; // Optimized count for performance
+function ParticleField({ scrollProgress, isMobile }: { scrollProgress: React.MutableRefObject<number>, isMobile: boolean }) {
+  const count = isMobile ? 50 : 150; // Much fewer particles on mobile
   const mesh = useRef<THREE.Points>(null);
   const hoverTarget = useRef(new THREE.Vector3());
   
@@ -50,83 +50,67 @@ function ParticleField({ scrollProgress }: { scrollProgress: React.MutableRefObj
     const time = state.clock.elapsedTime;
     const p = scrollProgress.current;
     
-    // Mouse hover effect - optimized
-    hoverTarget.current.x = (state.mouse.x * state.viewport.width) / 2;
-    hoverTarget.current.y = (state.mouse.y * state.viewport.height) / 2;
-    hoverTarget.current.z = 0;
+    // Skip updates on mobile for performance
+    if (isMobile && Math.floor(time * 60) % 4 !== 0) return; // Update every 4th frame on mobile
+    if (!isMobile && Math.floor(time * 60) % 2 !== 0) return; // Update every 2nd frame on desktop
     
     const positionsAttr = mesh.current.geometry.attributes.position;
     
-    // Update only every few frames for performance
-    if (Math.floor(time * 60) % 2 === 0) {
-      for (let i = 0; i < count; i++) {
-          const ix = i * 3;
-          const iy = i * 3 + 1;
-          const iz = i * 3 + 2;
-          
-          let x = initialPositions[ix];
-          let y = initialPositions[iy];
-          let z = initialPositions[iz];
-          
-          // Gentle rotation for globe effect
-          const rotatedX = x * Math.cos(time * 0.03) - z * Math.sin(time * 0.03);
-          const rotatedZ = x * Math.sin(time * 0.03) + z * Math.cos(time * 0.03);
-          
-          // Add mouse repulsion - simplified
-          const dx = rotatedX - hoverTarget.current.x;
-          const dy = y - hoverTarget.current.y;
-          const dz = rotatedZ - hoverTarget.current.z;
-          const distSq = dx*dx + dy*dy + dz*dz;
-          
-          let repelX = 0, repelY = 0, repelZ = 0;
-          if (distSq < 20) {
-              const force = (20 - distSq) / 20;
-              repelX = dx * force * 0.2;
-              repelY = dy * force * 0.2;
-              repelZ = dz * force * 0.2;
-          }
-
-          positionsAttr.setXYZ(i, rotatedX + repelX, y + repelY, rotatedZ + repelZ);
-      }
-      positionsAttr.needsUpdate = true;
+    for (let i = 0; i < count; i++) {
+        const ix = i * 3;
+        const iy = i * 3 + 1;
+        const iz = i * 3 + 2;
+        
+        let x = initialPositions[ix];
+        let y = initialPositions[iy];
+        let z = initialPositions[iz];
+        
+        // Gentle rotation for globe effect
+        const rotatedX = x * Math.cos(time * (isMobile ? 0.01 : 0.03)) - z * Math.sin(time * (isMobile ? 0.01 : 0.03));
+        const rotatedZ = x * Math.sin(time * (isMobile ? 0.01 : 0.03)) + z * Math.cos(time * (isMobile ? 0.01 : 0.03));
+        
+        positionsAttr.setXYZ(i, rotatedX, y, rotatedZ);
     }
+    positionsAttr.needsUpdate = true;
     
-    mesh.current.rotation.y = time * 0.015 + p * 0.3; // Even slower for performance
+    mesh.current.rotation.y = time * (isMobile ? 0.005 : 0.015) + p * (isMobile ? 0.1 : 0.3);
   });
 
   return (
     <Points ref={mesh} positions={positions} stride={3} frustumCulled={false}>
       <PointMaterial
         transparent
-        color="#0ea5e9" // Cyan color
-        size={0.08}
+        color="#0ea5e9"
+        size={isMobile ? 0.04 : 0.08}
         sizeAttenuation={true}
         depthWrite={false}
-        opacity={0.8} // More visible
+        opacity={isMobile ? 0.5 : 0.8}
         blending={THREE.AdditiveBlending}
       />
     </Points>
   );
 }
 
-function GlobeLines({ scrollProgress }: { scrollProgress: React.MutableRefObject<number> }) {
+function GlobeLines({ scrollProgress, isMobile }: { scrollProgress: React.MutableRefObject<number>, isMobile: boolean }) {
   const linesRef = useRef<THREE.Group>(null);
   
   useFrame((state) => {
     if (!linesRef.current) return;
     const time = state.clock.elapsedTime;
-    linesRef.current.rotation.y = time * 0.01; // Very slow rotation for performance
+    linesRef.current.rotation.y = time * (isMobile ? 0.005 : 0.01); // Very slow rotation for performance
   });
 
   const radius = 15;
   const lines = [];
 
-  // Meridians (longitude lines) - more lines for fuller grid
-  for (let i = 0; i < 24; i++) { // Increased from 12 to 24
-    const phi = (i / 24) * Math.PI * 2;
+  // Meridians (longitude lines) - reduced on mobile
+  const meridianCount = isMobile ? 12 : 24;
+  for (let i = 0; i < meridianCount; i++) {
+    const phi = (i / meridianCount) * Math.PI * 2;
     const points = [];
-    for (let j = 0; j <= 30; j++) { // Reduced points for performance
-      const theta = (j / 30) * Math.PI;
+    const pointCount = isMobile ? 20 : 30; // Fewer points on mobile
+    for (let j = 0; j <= pointCount; j++) {
+      const theta = (j / pointCount) * Math.PI;
       const x = radius * Math.sin(theta) * Math.cos(phi);
       const y = radius * Math.sin(theta) * Math.sin(phi);
       const z = radius * Math.cos(theta);
@@ -136,17 +120,19 @@ function GlobeLines({ scrollProgress }: { scrollProgress: React.MutableRefObject
     lines.push(
       <line key={`meridian-${i}`}>
         <bufferGeometry attach="geometry" {...geometry} />
-        <lineBasicMaterial attach="material" color="#0ea5e9" opacity={0.6} transparent />
+        <lineBasicMaterial attach="material" color="#0ea5e9" opacity={isMobile ? 0.4 : 0.6} transparent />
       </line>
     );
   }
 
-  // Parallels (latitude lines) - more lines for fuller grid
-  for (let i = 1; i < 12; i++) { // Increased from 6 to 12
-    const theta = (i / 12) * Math.PI;
+  // Parallels (latitude lines) - reduced on mobile
+  const parallelCount = isMobile ? 6 : 12;
+  for (let i = 1; i < parallelCount; i++) {
+    const theta = (i / parallelCount) * Math.PI;
     const points = [];
-    for (let j = 0; j <= 60; j++) { // Reduced points for performance
-      const phi = (j / 60) * Math.PI * 2;
+    const pointCount = isMobile ? 30 : 60; // Fewer points on mobile
+    for (let j = 0; j <= pointCount; j++) {
+      const phi = (j / pointCount) * Math.PI * 2;
       const x = radius * Math.sin(theta) * Math.cos(phi);
       const y = radius * Math.sin(theta) * Math.sin(phi);
       const z = radius * Math.cos(theta);
@@ -156,7 +142,7 @@ function GlobeLines({ scrollProgress }: { scrollProgress: React.MutableRefObject
     lines.push(
       <line key={`parallel-${i}`}>
         <bufferGeometry attach="geometry" {...geometry} />
-        <lineBasicMaterial attach="material" color="#0ea5e9" opacity={0.4} transparent />
+        <lineBasicMaterial attach="material" color="#0ea5e9" opacity={isMobile ? 0.3 : 0.4} transparent />
       </line>
     );
   }
@@ -390,12 +376,12 @@ function CameraController({ scrollProgress }: { scrollProgress: React.MutableRef
     return null;
 }
 
-function AdvancedScene({ scrollProgress }: { scrollProgress: React.MutableRefObject<number> }) {
+function AdvancedScene({ scrollProgress, isMobile }: { scrollProgress: React.MutableRefObject<number>, isMobile: boolean }) {
     return (
         <>
             <CameraController scrollProgress={scrollProgress} />
-            <ParticleField scrollProgress={scrollProgress} />
-            <GlobeLines scrollProgress={scrollProgress} />
+            <ParticleField scrollProgress={scrollProgress} isMobile={isMobile} />
+            <GlobeLines scrollProgress={scrollProgress} isMobile={isMobile} />
             <NeuralCore scrollProgress={scrollProgress} />
             <FloatingNodes scrollProgress={scrollProgress} />
             
@@ -406,6 +392,59 @@ function AdvancedScene({ scrollProgress }: { scrollProgress: React.MutableRefObj
             <ContactShadows position={[0, -5, 0]} opacity={0.4} scale={40} blur={2} far={10} color="#000" />
         </>
     );
+}
+
+// Simplified mobile version with reduced complexity
+function MobileGlobe({ scrollProgress }: { scrollProgress: React.MutableRefObject<number> }) {
+  const mesh = useRef<THREE.Points>(null);
+  
+  const [positions] = useMemo(() => {
+    const count = 50; // Very reduced for mobile
+    const temp = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const r = 12;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos((Math.random() * 2) - 1);
+      const x = r * Math.sin(phi) * Math.cos(theta);
+      const y = r * Math.sin(phi) * Math.sin(theta);
+      const z = r * Math.cos(phi);
+      temp[i * 3] = x; temp[i * 3 + 1] = y; temp[i * 3 + 2] = z;
+    }
+    return [temp];
+  }, []);
+
+  useFrame((state) => {
+    if (!mesh.current) return;
+    const time = state.clock.elapsedTime;
+    // Very minimal updates on mobile - only every 10th frame
+    if (Math.floor(time * 60) % 10 !== 0) return;
+    
+    mesh.current.rotation.y = time * 0.005;
+  });
+
+  return (
+    <Points ref={mesh} positions={positions} stride={3} frustumCulled={false}>
+      <PointMaterial
+        transparent
+        color="#0ea5e9"
+        size={0.03}
+        sizeAttenuation={false}
+        depthWrite={false}
+        opacity={0.3}
+        blending={THREE.AdditiveBlending}
+      />
+    </Points>
+  );
+}
+
+function MobileScene({ scrollProgress }: { scrollProgress: React.MutableRefObject<number> }) {
+  return (
+    <>
+      <MobileGlobe scrollProgress={scrollProgress} />
+      <ambientLight intensity={0.3} />
+      <directionalLight position={[5, 5, 5]} intensity={0.5} />
+    </>
+  );
 }
 
 function LoadingFallback() {
@@ -420,15 +459,42 @@ function LoadingFallback() {
   );
 }
 
+export default function RecruitSuite3D() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollProgress = useRef(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
   useEffect(() => {
-    if (!containerRef.current) return;
+    // Mobile detection
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768 || 
+                    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(mobile);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    // Progressive loading - delay 3D loading on mobile
+    const delay = isMobile ? 500 : 100;
+    const timer = setTimeout(() => setIsLoaded(true), delay);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      clearTimeout(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!containerRef.current || !isLoaded) return;
 
     const st = ScrollTrigger.create({
       trigger: containerRef.current,
       start: "top top",
       end: "bottom bottom",
-      scrub: 1,
-      pin: true,
+      scrub: isMobile ? 0.5 : 1, // Reduced scrub on mobile
+      pin: !isMobile, // Disable pinning on mobile for performance
       onUpdate: (self) => {
         scrollProgress.current = self.progress;
       }
@@ -437,25 +503,39 @@ function LoadingFallback() {
     return () => {
       st.kill();
     };
-  }, []);
+  }, [isLoaded, isMobile]);
 
   return (
     <div ref={containerRef} className="relative w-full h-[800vh] bg-black">
         <div className="sticky top-0 left-0 w-full h-screen overflow-hidden">
-            <Canvas 
-              camera={{ position: [0, 0, 20], fov: 45 }} 
-              dpr={[1, 1.5]} // Reduced max DPR for performance
-              gl={{ 
-                antialias: false, // Disable antialiasing for performance
-                alpha: false,
-                powerPreference: "high-performance"
-              }}
-              frameloop="demand" // Only render when needed
-            >
-                <Suspense fallback={<LoadingFallback />}>
-                    <AdvancedScene scrollProgress={scrollProgress} />
-                </Suspense>
-            </Canvas>
+            {isLoaded ? (
+              <Canvas 
+                camera={{ position: [0, 0, 20], fov: 45 }} 
+                dpr={isMobile ? [1, 1] : [1, 1.5]} // Even lower DPR on mobile
+                gl={{ 
+                  antialias: !isMobile, // Disable antialiasing on mobile
+                  alpha: false,
+                  powerPreference: "high-performance",
+                  stencil: false,
+                  depth: true
+                }}
+                frameloop={isMobile ? "demand" : "always"} // Demand mode on mobile
+              >
+                  <Suspense fallback={<LoadingFallback />}>
+                      {isMobile ? (
+                        <MobileScene scrollProgress={scrollProgress} />
+                      ) : (
+                        <AdvancedScene scrollProgress={scrollProgress} isMobile={isMobile} />
+                      )}
+                  </Suspense>
+              </Canvas>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-black">
+                <div className="text-cyan-400 text-xl font-mono animate-pulse">
+                  Loading 3D Interface...
+                </div>
+              </div>
+            )}
             
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none rounded-[40px] shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] z-10" />
             

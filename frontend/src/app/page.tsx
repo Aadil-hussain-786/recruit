@@ -24,12 +24,16 @@ const RecruitSuite3D = dynamic(() => import('@/components/marketing/RecruitSuite
     </div>
   )
 });
-
-// --- Writing Style Component ---
-const TypingEffect = ({ text, delay = 0 }: { text: string, delay?: number }) => {
+const TypingEffect = ({ text, delay = 0, isMobile = false }: { text: string, delay?: number, isMobile?: boolean }) => {
     const [displayedText, setDisplayedText] = useState("");
     
     useEffect(() => {
+        if (isMobile) {
+            // Skip typing animation on mobile for performance
+            setDisplayedText(text);
+            return;
+        }
+        
         const timeout = setTimeout(() => {
             let i = 0;
             const interval = setInterval(() => {
@@ -40,16 +44,18 @@ const TypingEffect = ({ text, delay = 0 }: { text: string, delay?: number }) => 
             return () => clearInterval(interval);
         }, delay * 1000);
         return () => clearTimeout(timeout);
-    }, [text, delay]);
+    }, [text, delay, isMobile]);
 
     return (
         <span className="relative">
             {displayedText}
-            <motion.span 
-                animate={{ opacity: [1, 0] }}
-                transition={{ duration: 0.8, repeat: Infinity }}
-                className="inline-block w-[2px] h-[0.8em] bg-accent-cyan ml-1 align-middle"
-            />
+            {!isMobile && (
+                <motion.span 
+                    animate={{ opacity: [1, 0] }}
+                    transition={{ duration: 0.8, repeat: Infinity }}
+                    className="inline-block w-[2px] h-[0.8em] bg-accent-cyan ml-1 align-middle"
+                />
+            )}
         </span>
     );
 };
@@ -170,27 +176,34 @@ const AdvancedNavbar = () => {
 
 export default function Home() {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Optimize initial load
-    setIsLoaded(true);
+    // Mobile detection
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768 || 
+                    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(mobile);
+    };
     
-    // Preload critical resources
-    if (typeof window !== 'undefined') {
-      // Preload Three.js related assets
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'script';
-      link.href = 'https://unpkg.com/three@0.155.0/build/three.min.js';
-      document.head.appendChild(link);
-    }
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    // Progressive loading with mobile optimization
+    const loadDelay = isMobile ? 200 : 100; // Longer delay on mobile for better UX
+    const timer = setTimeout(() => setIsLoaded(true), loadDelay);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      clearTimeout(timer);
+    };
   }, []);
 
   if (!isLoaded) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-cyan-400 text-2xl font-mono animate-pulse">
-          Initializing Recruit AI...
+        <div className="text-cyan-400 text-2xl font-mono animate-pulse text-center px-4">
+          {isMobile ? "Optimizing for Mobile..." : "Initializing Recruit AI..."}
         </div>
       </div>
     );
@@ -213,9 +226,9 @@ export default function Home() {
                     </div>
                     
                     <h1 className="text-6xl md:text-9xl font-black uppercase tracking-tighter leading-[0.8] mb-12 text-slate-900">
-                        <TypingEffect text="REVOLUTIONIZE" delay={0.5} /> <br />
+                        <TypingEffect text="REVOLUTIONIZE" delay={0.5} isMobile={isMobile} /> <br />
                         <span className="cyan-gradient">
-                            <TypingEffect text="YOUR HIRING" delay={1.5} />
+                            <TypingEffect text="YOUR HIRING" delay={isMobile ? 0.5 : 1.5} isMobile={isMobile} />
                         </span>
                     </h1>
                     

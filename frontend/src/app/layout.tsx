@@ -18,6 +18,17 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "Recruit AI | Transform Your Hiring Process",
   description: "The modern recruitment platform powered by AI to help you find the best talent effortlessly.",
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'black-translucent',
+  },
 };
 
 export default function RootLayout({
