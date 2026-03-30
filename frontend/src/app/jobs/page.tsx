@@ -320,8 +320,8 @@ function JobsContent() {
                                             <button className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800" onClick={() => { setMenuOpenId(null); handlePublishJob(job._id); }}>
                                                 <Share size={14} /> Publish to Boards
                                             </button>
-                                            <button 
-                                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-indigo-600 font-bold" 
+                                            <button
+                                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-indigo-600 font-bold"
                                                 onClick={() => { setMenuOpenId(null); router.push(`/talent-discovery?jobId=${job._id}`); }}
                                             >
                                                 <Zap size={14} className="text-indigo-500 fill-indigo-500" /> Discover Social Talent

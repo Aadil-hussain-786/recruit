@@ -33,12 +33,12 @@ function TalentDiscoveryContent() {
     const [discoveryResults, setDiscoveryResults] = useState<any[]>([]);
     const [error, setError] = useState("");
     const [scrollProgress, setScrollProgress] = useState(0);
-    
+
     // UI State
     const [selectedCandidate, setSelectedCandidate] = useState<any | null>(null);
     const [savingId, setSavingId] = useState<string | null>(null);
     const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
-    
+
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -116,9 +116,9 @@ function TalentDiscoveryContent() {
         <div ref={containerRef} className="bg-white text-black min-h-[400vh] relative font-sans">
             {/* Fixed 3D Universe Background */}
             <div className="fixed inset-0 z-0 opacity-90 pointer-events-auto">
-                <TalentUniverse 
-                    candidates={discoveryResults} 
-                    onSelect={setSelectedCandidate} 
+                <TalentUniverse
+                    candidates={discoveryResults}
+                    onSelect={setSelectedCandidate}
                     selectedId={selectedCandidate?.id}
                     scrollProgress={scrollProgress}
                 />
@@ -147,7 +147,7 @@ function TalentDiscoveryContent() {
                                 <option key={job._id} value={job._id}>{job.title}</option>
                             ))}
                         </select>
-                        <button 
+                        <button
                             onClick={handleDiscovery}
                             disabled={loading || !selectedJobId}
                             className="text-black hover:text-indigo-600 transition-colors"
@@ -162,7 +162,7 @@ function TalentDiscoveryContent() {
             <div className="relative z-10">
                 {/* Chapter 1: Introduction */}
                 <section className="h-screen flex items-center px-20 pointer-events-none">
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, y: 50 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         className="max-w-xl"
@@ -178,7 +178,7 @@ function TalentDiscoveryContent() {
 
                 {/* Chapter 2: OSINT Intelligence */}
                 <section className="h-screen flex items-center justify-end px-20 pointer-events-none">
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, x: 50 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         className="max-w-md text-right"
@@ -193,7 +193,7 @@ function TalentDiscoveryContent() {
 
                 {/* Chapter 3: DNA Matching */}
                 <section className="h-screen flex items-center px-20 pointer-events-none">
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         className="max-w-md"
@@ -279,7 +279,7 @@ function TalentDiscoveryContent() {
                             >
                                 {savedIds.has(selectedCandidate.id) ? "Verified" : "Save Node"}
                             </Button>
-                            <a 
+                            <a
                                 href={sanitizeUrl(selectedCandidate.socialUrl)}
                                 target="_blank"
                                 className="flex items-center justify-center border border-black/10 hover:bg-black/5 text-[10px] font-black uppercase tracking-widest transition-all"
@@ -299,7 +299,7 @@ function TalentDiscoveryContent() {
                     </div>
                 </div>
             )}
-            
+
             {loading && (
                 <div className="fixed inset-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center">
                     <div className="text-center space-y-4">

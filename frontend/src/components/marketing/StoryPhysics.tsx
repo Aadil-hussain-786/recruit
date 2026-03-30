@@ -1,62 +1,59 @@
 "use client";
 
-import React, { useRef, useMemo, useState, Suspense, useEffect } from "react";
+import React, { useRef, useMemo, useState, Suspense, useEffect, useCallback } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
-    Line,
-    MeshTransmissionMaterial,
-    Float,
-    Text,
-    Environment,
-    ContactShadows,
-    PerspectiveCamera,
     Points,
-    PointMaterial
+    PointMaterial,
+    PerspectiveCamera,
+    Float
 } from "@react-three/drei";
 import * as THREE from "three";
 import { motion, useScroll, useSpring } from "framer-motion";
 
-// --- HOOK: Global Scroll Progress ---
+// --- HOOK: Throttled Scroll Progress ---
 const useScrollProgress = () => {
     const [progress, setProgress] = useState(0);
     useEffect(() => {
+        let ticking = false;
         const handleScroll = () => {
-            const total = document.body.scrollHeight - window.innerHeight;
-            if (total <= 0) return;
-            setProgress(window.scrollY / total);
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(() => {
+                const total = document.body.scrollHeight - window.innerHeight;
+                if (total > 0) {
+                    setProgress(window.scrollY / total);
+                }
+                ticking = false;
+            });
         };
-        window.addEventListener("scroll", handleScroll);
+        window.addEventListener("scroll", handleScroll, { passive: true });
         handleScroll();
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
     return progress;
 };
 
-// --- RIG: Enhanced Camera Shifting ---
+// --- RIG: Lightweight Camera Shifting ---
 const Rig = ({ p }: { p: number }) => {
-    const { camera, mouse } = useThree();
-    const vec = new THREE.Vector3();
+    const { camera } = useThree();
+    const vec = useMemo(() => new THREE.Vector3(), []);
     
-    useFrame((state) => {
-        // Shifting camera position based on mouse AND scroll
+    useFrame(() => {
         const zPos = 20 - p * 10;
         const yOffset = p * 5;
         const xOffset = Math.sin(p * Math.PI) * 2;
         
         camera.position.lerp(
-            vec.set(
-                mouse.x * 2 + xOffset, 
-                mouse.y * 2 - yOffset, 
-                zPos
-            ), 
-            0.05
+            vec.set(xOffset, -yOffset, zPos), 
+            0.03
         );
         camera.lookAt(0, 0, 0);
     });
     return null;
 };
 
-// --- LIGHT THEME COMPONENT: CRYSTALLINE CORE ---
+// --- LIGHT CRYSTALLINE CORE (no transmission material) ---
 const CrystallineCore = ({ p }: { p: number }) => {
     const group = useRef<THREE.Group>(null);
     const mesh = useRef<THREE.Mesh>(null);
@@ -65,8 +62,8 @@ const CrystallineCore = ({ p }: { p: number }) => {
 
     useFrame((state) => {
         if (mesh.current) {
-            mesh.current.rotation.x = state.clock.getElapsedTime() * 0.1;
-            mesh.current.rotation.y = state.clock.getElapsedTime() * 0.15;
+            mesh.current.rotation.x = state.clock.getElapsedTime() * 0.08;
+            mesh.current.rotation.y = state.clock.getElapsedTime() * 0.12;
             mesh.current.scale.setScalar(1.2 + p * 1);
         }
         if (group.current) {
@@ -75,23 +72,19 @@ const CrystallineCore = ({ p }: { p: number }) => {
         }
     });
 
+    if (!visible || fadeOut <= 0) return null;
+
     return (
-        <group ref={group} visible={visible && fadeOut > 0}>
-            <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
+        <group ref={group}>
+            <Float speed={1.2} rotationIntensity={0.3} floatIntensity={0.3}>
                 <mesh ref={mesh}>
                     <octahedronGeometry args={[5, 0]} />
-                    <MeshTransmissionMaterial
-                        backside
-                        samples={8}
-                        thickness={3}
-                        chromaticAberration={0.05}
-                        anisotropy={0.1}
-                        distortion={0.1}
-                        distortionScale={0.1}
-                        temporalDistortion={0.05}
+                    <meshStandardMaterial
                         color="#e0f7fa"
                         transparent
-                        opacity={fadeOut * 0.8}
+                        opacity={fadeOut * 0.25}
+                        roughness={0.1}
+                        metalness={0.3}
                     />
                 </mesh>
                 <mesh scale={1.02}>
@@ -103,11 +96,11 @@ const CrystallineCore = ({ p }: { p: number }) => {
     );
 };
 
-// --- DATA DUST PARTICLES ---
+// --- OPTIMIZED PARTICLES (reduced count) ---
 const DataDust = ({ p }: { p: number }) => {
     const points = useMemo(() => {
-        const pArr = new Float32Array(2000 * 3);
-        for (let i = 0; i < 2000; i++) {
+        const pArr = new Float32Array(600 * 3);
+        for (let i = 0; i < 600; i++) {
             pArr[i * 3] = (Math.random() - 0.5) * 50;
             pArr[i * 3 + 1] = (Math.random() - 0.5) * 50;
             pArr[i * 3 + 2] = (Math.random() - 0.5) * 50;
@@ -115,23 +108,24 @@ const DataDust = ({ p }: { p: number }) => {
         return pArr;
     }, []);
 
-    // Particles also fade out completely after the 1st phase
     const fadeOut = p > 0.15 ? Math.max(0, 1 - (p - 0.15) / 0.2) : 1;
 
     const pointsRef = useRef<THREE.Points>(null);
     useFrame((state) => {
         if (pointsRef.current) {
-            pointsRef.current.rotation.y = state.clock.getElapsedTime() * 0.02;
+            pointsRef.current.rotation.y = state.clock.getElapsedTime() * 0.015;
             pointsRef.current.position.y = p * 15;
         }
     });
 
+    if (fadeOut <= 0) return null;
+
     return (
-        <Points ref={pointsRef} positions={points} stride={3} frustumCulled={false} visible={fadeOut > 0}>
+        <Points ref={pointsRef} positions={points} stride={3}>
             <PointMaterial 
                 transparent 
                 color="#0ea5e9" 
-                size={0.05} 
+                size={0.06} 
                 sizeAttenuation={true} 
                 depthWrite={false} 
                 opacity={0.2 * fadeOut} 
@@ -140,7 +134,7 @@ const DataDust = ({ p }: { p: number }) => {
     );
 };
 
-// --- SCROLL PROGRESS UI (LIGHT) ---
+// --- SCROLL PROGRESS UI ---
 export const ScrollIndicator = () => {
     const { scrollYProgress } = useScroll();
     const scaleX = useSpring(scrollYProgress, {
@@ -157,7 +151,7 @@ export const ScrollIndicator = () => {
             <div className="w-32 h-[1px] bg-slate-100 relative overflow-hidden shadow-sm">
                 <motion.div 
                     className="absolute top-0 left-0 h-full bg-accent-cyan shadow-[0_0_10px_rgba(14,165,233,0.2)]"
-                    style={{ scaleX }}
+                    style={{ scaleX, transformOrigin: "left" }}
                 />
             </div>
         </div>
@@ -178,17 +172,25 @@ export default function StoryPhysics() {
         <>
             <ScrollIndicator />
             <div className="fixed inset-0 z-[-1] bg-white pointer-events-none">
-                <Canvas dpr={[1, 2]}>
+                <Canvas 
+                    dpr={[1, 1.5]}
+                    gl={{ 
+                        antialias: false, 
+                        alpha: true, 
+                        powerPreference: "high-performance",
+                        stencil: false,
+                        depth: true
+                    }}
+                    performance={{ min: 0.5 }}
+                >
                     <PerspectiveCamera makeDefault position={[0, 0, 20]} fov={35} />
                     <Suspense fallback={null}>
                         <color attach="background" args={["#ffffff"]} />
                         <ambientLight intensity={1.5} />
-                        <pointLight position={[10, 10, 10]} intensity={2} color="#ffffff" />
+                        <directionalLight position={[10, 10, 10]} intensity={1.5} />
                         <CrystallineCore p={progress} />
                         <DataDust p={progress} />
                         <Rig p={progress} />
-                        <Environment preset="studio" />
-                        <ContactShadows position={[0, -10, 0]} opacity={0.1} scale={40} blur={2.5} far={15} />
                     </Suspense>
                 </Canvas>
             </div>

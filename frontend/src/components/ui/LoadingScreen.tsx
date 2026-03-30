@@ -44,13 +44,13 @@ export default function LoadingScreen({ onComplete }: { onComplete?: () => void 
             const now = Date.now();
             const elapsed = now - start;
 
-            if (elapsed < 2000) {
-                // Fast to 99% in 2 seconds
-                currentProgress = Math.min((elapsed / 2000) * 99, 99);
+            if (elapsed < 1000) {
+                // Fast to 99% in 1 second
+                currentProgress = Math.min((elapsed / 1000) * 99, 99);
                 setProgress(currentProgress);
                 requestAnimationFrame(update);
-            } else if (elapsed < 12000) {
-                // Halt at 99% for 10 seconds (10000ms)
+            } else if (elapsed < 1500) {
+                // Halt at 99% for 0.5 seconds
                 setProgress(99);
                 requestAnimationFrame(update);
             } else {
@@ -59,7 +59,7 @@ export default function LoadingScreen({ onComplete }: { onComplete?: () => void 
                 setTimeout(() => {
                     setIsVisible(false);
                     if (onComplete) onComplete();
-                }, 800);
+                }, 400);
             }
         };
 

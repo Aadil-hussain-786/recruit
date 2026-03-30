@@ -13,17 +13,12 @@ import {
     Terminal as TerminalIcon, 
     Zap as ZapIcon
 } from "lucide-react";
+import { HandwrittenText, ScribbleUnderline, HighlightCircle } from "@/components/marketing/HandwrittenText";
+import AboutSection from "@/components/marketing/AboutSection";
+import ServicesSection from "@/components/marketing/ServicesSection";
+import TestimonialsSection from "@/components/marketing/TestimonialsSection";
+
 const Footer = dynamic(() => import('@/components/layout/Footer'), { ssr: false });
-const RecruitSuite3D = dynamic(() => import('@/components/marketing/RecruitSuite3D'), { 
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-screen bg-black flex items-center justify-center">
-      <div className="text-cyan-400 text-xl font-mono animate-pulse">
-        Loading Neural Interface...
-      </div>
-    </div>
-  )
-});
 const TypingEffect = ({ text, delay = 0, isMobile = false }: { text: string, delay?: number, isMobile?: boolean }) => {
     const [displayedText, setDisplayedText] = useState("");
     
@@ -66,17 +61,24 @@ const AdvancedNavbar = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     useEffect(() => {
+        let ticking = false;
         const handleScroll = () => {
-            setScrolled(window.scrollY > 50);
-            const p = window.scrollY / (document.body.scrollHeight - window.innerHeight);
-            if (p < 0.15) setProtocol("SYSTEM_INIT");
-            else if (p < 0.35) setProtocol("NEURAL_CORE");
-            else if (p < 0.55) setProtocol("FLOW_SYNC");
-            else if (p < 0.75) setProtocol("GLOBAL_MESH");
-            else if (p < 0.90) setProtocol("SECURE_BIAS");
-            else setProtocol("MATCH_READY");
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    setScrolled(window.scrollY > 50);
+                    const p = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+                    if (p < 0.15) setProtocol("SYSTEM_INIT");
+                    else if (p < 0.35) setProtocol("NEURAL_CORE");
+                    else if (p < 0.55) setProtocol("FLOW_SYNC");
+                    else if (p < 0.75) setProtocol("GLOBAL_MESH");
+                    else if (p < 0.90) setProtocol("SECURE_BIAS");
+                    else setProtocol("MATCH_READY");
+                    ticking = false;
+                });
+                ticking = true;
+            }
         };
-        window.addEventListener("scroll", handleScroll);
+        window.addEventListener("scroll", handleScroll, { passive: true });
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
@@ -201,103 +203,86 @@ export default function Home() {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-cyan-400 text-2xl font-mono animate-pulse text-center px-4">
-          {isMobile ? "Optimizing for Mobile..." : "Initializing Recruit AI..."}
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-accent-cyan text-2xl font-mono animate-pulse text-center px-4 uppercase tracking-[0.3em]">
+          {isMobile ? "Optimizing_Systems..." : "Initializing_Recruit_AI_v1.1..."}
         </div>
       </div>
     );
   }
     return (
-        <div className="bg-transparent text-slate-900 min-h-screen font-sans selection:bg-accent-cyan selection:text-white relative overflow-x-hidden pt-20 lg:pt-32">
+        <div className="bg-white bg-grid text-slate-900 min-h-screen font-sans selection:bg-accent-cyan selection:text-white relative overflow-x-hidden pt-20 lg:pt-32">
             <AdvancedNavbar />
 
-            {/* Hero Section */}
-            <section className="min-h-[85vh] flex flex-col items-center justify-center relative z-20 px-6">
-                <motion.div 
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1, delay: 0.2 }}
-                    className="text-center max-w-5xl"
-                >
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-100 mb-8 shadow-sm">
-                        <CpuIcon className="w-3 h-3 text-accent-cyan" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Autonomous Talent Layer Powered by AI</span>
-                    </div>
-                    
-                    <h1 className="text-6xl md:text-9xl font-black uppercase tracking-tighter leading-[0.8] mb-12 text-slate-900">
-                        <TypingEffect text="REVOLUTIONIZE" delay={0.5} isMobile={isMobile} /> <br />
-                        <span className="cyan-gradient">
-                            <TypingEffect text="YOUR HIRING" delay={isMobile ? 0.5 : 1.5} isMobile={isMobile} />
-                        </span>
-                    </h1>
-                    
-                    <motion.p 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 2.5, duration: 1 }}
-                        className="text-sm md:text-lg font-mono max-w-3xl mx-auto mb-16 text-slate-500 leading-relaxed italic"
-                    >
-                        The world's most advanced recruitment engine for high-growth teams. 
-                        Neural matching, automated screening, and merit-based talent discovery.
-                    </motion.p>
-                    
+            <div className="relative z-10">
+                {/* Hero Section */}
+                <section className="min-h-screen flex flex-col items-center justify-center relative px-6">
                     <motion.div 
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 3, duration: 1 }}
-                        className="flex flex-col sm:flex-row items-center justify-center gap-8"
+                        transition={{ duration: 1, delay: 0.2 }}
+                        className="text-center max-w-6xl"
                     >
-                        <Link href="/register">
-                            <motion.button 
-                                className="bg-slate-900 text-white text-[12px] font-black uppercase tracking-[0.2em] px-12 py-6 hover:bg-accent-cyan hover:scale-105 active:scale-95 transition-all shadow-[0_10px_25px_-5px_rgba(15,23,42,0.15)] flex items-center gap-4"
-                                whileHover={{ 
-                                    scale: 1.05, 
-                                    boxShadow: "0 20px 40px -10px rgba(15,23,42,0.3)",
-                                    transition: { duration: 0.2 }
-                                }}
-                                whileTap={{ scale: 0.98 }}
-                            >
-                                LAUNCH ENGINE <ArrowRight size={18} />
-                            </motion.button>
-                        </Link>
-                        <Link href="/about" className="group flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors">
-                            <span className="w-8 h-[1px] bg-slate-200 group-hover:w-12 transition-all" /> SYSTEM_OVERVIEW
-                        </Link>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 mb-12 shadow-sm">
+                            <CpuIcon className="w-3 h-3 text-accent-cyan" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Autonomous Talent Layer Powered by AI</span>
+                        </div>
+                        
+                        <h1 className="text-6xl md:text-[10vw] font-black tracking-tighter leading-[0.75] mb-12 text-slate-900 uppercase">
+                            <HandwrittenText text="Neural" className="text-accent-cyan normal-case" delay={0.5} /> <br />
+                            <span className="relative inline-block">
+                                <HandwrittenText text="MATCHING" className="text-slate-900 italic" delay={1.0} />
+                                <ScribbleUnderline delay={2.0} />
+                            </span>
+                        </h1>
+                        
+                        <motion.p 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 1.5, duration: 1 }}
+                            className="text-sm md:text-xl font-mono max-w-3xl mx-auto mb-20 text-slate-500 leading-relaxed italic"
+                        >
+                            The world's most advanced recruitment engine for high-growth teams. 
+                            Benchmarking technical merit through 12.4B neural nodes.
+                        </motion.p>
+                        
+                        <motion.div 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 2, duration: 1 }}
+                            className="flex flex-col sm:flex-row items-center justify-center gap-12 mt-8"
+                        >
+                            <Link href="/register">
+                                <motion.button 
+                                    className="bg-slate-900 text-white text-[12px] font-black uppercase tracking-[0.3em] px-14 py-7 hover:bg-accent-cyan transition-all shadow-2xl flex items-center gap-4 group"
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.98 }}
+                                >
+                                    Launch Protocol <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                                </motion.button>
+                            </Link>
+                            <Link href="/about" className="group flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-slate-900 transition-colors">
+                                <span className="w-10 h-[1px] bg-slate-200 group-hover:w-16 transition-all" /> SYSTEM_WHITEPAPER
+                            </Link>
+                        </motion.div>
                     </motion.div>
-                </motion.div>
 
-                {/* Data HUD */}
-                <div className="absolute bottom-10 left-12 hidden lg:flex gap-12">
-                    <div className="flex flex-col gap-1 border-l border-sky-100 pl-4">
-                        <span className="text-xs font-black text-slate-900">12.4B</span>
-                        <span className="text-[8px] font-mono text-slate-400 uppercase tracking-widest">Neural_Nodes</span>
+                    {/* Meta Data HUD */}
+                    <div className="absolute bottom-10 left-12 hidden lg:flex gap-16">
+                        <div className="flex flex-col gap-2 border-l border-accent-cyan/20 pl-6 relative">
+                            <span className="text-2xl font-black text-slate-900">0.02s</span>
+                            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Match_Latency</span>
+                        </div>
                     </div>
-                    <div className="flex flex-col gap-1 border-l border-indigo-100 pl-4">
-                        <span className="text-xs font-black text-slate-900">99.8%</span>
-                        <span className="text-[8px] font-mono text-slate-400 uppercase tracking-widest">Match_Score</span>
-                    </div>
-                </div>
+                </section>
 
-                <div className="absolute bottom-10 right-12 hidden lg:flex items-center gap-4">
-                    <ShieldIcon className="w-4 h-4 text-slate-200" />
-                    <span className="text-[8px] font-mono text-slate-300 uppercase tracking-[0.4em]">Safe_Protocol_Active_v1.1</span>
-                </div>
-            </section>
-
-            {/* Immersive 3D Experience */}
-            <Suspense fallback={<div className="h-[50vh]" />}>
-                <RecruitSuite3D />
-            </Suspense>
-
-            {/* Big Background Text - Kept for footer transition */}
-            <section className="h-[50vh] flex items-center justify-center pointer-events-none">
-                <div className="text-center opacity-[0.03]">
-                    <h2 className="text-[25vw] font-black uppercase tracking-tighter leading-none select-none italic text-slate-900">RECRUIT_AI</h2>
-                </div>
-            </section>
-
-            <Footer />
+                {/* Sub-Pages / Content Sections */}
+                <AboutSection />
+                <ServicesSection />
+                <TestimonialsSection />
+                
+                <Footer />
+            </div>
         </div>
     );
 }
