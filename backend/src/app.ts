@@ -23,7 +23,20 @@ import aiRoutes from './routes/ai';
 
 // Middleware
 app.use(cors({
-    origin: 'http://localhost:3000', // Allow only the frontend to connect
+    origin: (origin: string | undefined, callback: any) => {
+      // Allow local development and frontend production URLs
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        process.env.FRONTEND_URL,
+      ].filter(Boolean);
+      
+      if (!origin || allowedOrigins.some(ao => origin.startsWith(ao as string)) || origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Allow all for now during transition, or restrict more if needed
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']

@@ -22,7 +22,11 @@ export default function ComingSoonPage() {
         setErrorMsg('');
 
         try {
-            const response = await fetch('http://localhost:5000/api/public/early-access', {
+            // Priority: Environment Variable > Relative Route (Vercel) > Localhost
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 
+                           (typeof window !== 'undefined' ? `${window.location.origin}/api/public/early-access` : 'http://localhost:5000/api/public/early-access');
+            
+            const response = await fetch(apiUrl.includes('localhost:3000') ? 'http://localhost:5000/api/public/early-access' : apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
