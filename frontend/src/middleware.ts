@@ -1,39 +1,31 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
+// Protocol: Full Hide Mode
 export function middleware(request: NextRequest) {
-  // Allow the home page and the coming-soon page
-  if (
-    request.nextUrl.pathname === '/' || 
-    request.nextUrl.pathname.startsWith('/coming-soon')
-  ) {
-    return NextResponse.next()
-  }
-  
-  // Allow internal Next.js files and static assets
-  if (
-    request.nextUrl.pathname.startsWith('/_next') ||
-    request.nextUrl.pathname.includes('.') ||
-    request.nextUrl.pathname.startsWith('/api') ||
-    request.nextUrl.pathname.startsWith('/images/') ||
-    request.nextUrl.pathname.startsWith('/videos/') 
-  ) {
-    return NextResponse.next()
-  }
+    const { pathname } = request.nextUrl;
 
-  // Redirect all other requests to the Coming Soon page
-  return NextResponse.redirect(new URL('/coming-soon', request.url))
+    // 1. Define allowed paths (Whitelisted)
+    const isAllowed = 
+        pathname === '/' ||                          // Homepage
+        pathname === '/coming-soon' ||                // Target placeholder
+        pathname === '/robots.txt' ||                 // SEO
+        pathname.startsWith('/_next') ||              // Next.js internal (css/js/images)
+        pathname.startsWith('/api') ||                // API routes
+        pathname.includes('favicon.ico') ||           // Favicon
+        pathname.includes('.png') ||                  // Dynamic assets
+        pathname.includes('.jpg') ||
+        pathname.includes('.svg');
+
+    // 2. Redirect all other traffic to Coming Soon
+    if (!isAllowed) {
+        return NextResponse.redirect(new URL('/coming-soon', request.url));
+    }
+
+    return NextResponse.next();
 }
 
+// Optimization: Apply to all routes
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
-  ],
-}
+    matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+};

@@ -1,0 +1,12 @@
+User-agent: *
+Disallow: /dashboard/
+Disallow: /jobs/
+Disallow: /candidates/
+Disallow: /talent-discovery/
+Disallow: /interview/
+Disallow: /onboarding/
+Disallow: /resume-fetcher/
+Allow: /coming-soon/
+
+# Optimization: Allow the homepage to be crawled but hide internal tools
+Allow: /$

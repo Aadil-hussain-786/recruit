@@ -3,6 +3,7 @@ import Job from '../models/Job';
 import Candidate from '../models/Candidate';
 import Application from '../models/Application';
 import { aiService } from '../services/aiService';
+import { emailService } from '../services/emailService';
 import mongoose from 'mongoose';
 
 export const getPublicJob = async (req: Request, res: Response) => {
@@ -235,6 +236,110 @@ export const onboardPulseCandidate = async (req: Request, res: Response) => {
     } catch (error: any) {
         console.error('[OnboardPulse] Error:', error);
         res.status(500).json({ success: false, message: 'Failed to initialize pulse sequence' });
+    }
+};
+
+export const requestEarlyAccess = async (req: Request, res: Response) => {
+    try {
+        const { name, email, company, message } = req.body;
+
+        if (!name || !email) {
+            return res.status(400).json({ success: false, message: 'Name and Email are required.' });
+        }
+
+        const adminEmail = 'recruitaicorp@gmail.com';
+        const subject = `🚀 New Early Access Request: ${name}`;
+        
+        const html = `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #f1f5f9; border-radius: 24px; background-color: #ffffff; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
+                <div style="margin-bottom: 32px; border-bottom: 2px solid #0ea5e9; padding-bottom: 16px;">
+                    <h1 style="color: #0f172a; margin: 0; font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: -0.025em;">Recruit <span style="color: #0ea5e9;">// AI</span></h1>
+                    <p style="color: #64748b; margin-top: 4px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;">Neural Talent Protocol</p>
+                </div>
+                
+                <h2 style="color: #0f172a; font-size: 20px; font-weight: 800; margin-bottom: 24px;">New Protocol Request Detected</h2>
+                
+                <div style="background-color: #f8fafc; border-radius: 16px; padding: 24px; margin-bottom: 32px;">
+                    <div style="margin-bottom: 16px;">
+                        <p style="color: #64748b; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 4px 0;">Requester Name</p>
+                        <p style="color: #0f172a; font-size: 16px; font-weight: 600; margin: 0;">${name}</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <p style="color: #64748b; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 4px 0;">Email Address</p>
+                        <p style="color: #0f172a; font-size: 16px; font-weight: 600; margin: 0;">${email}</p>
+                    </div>
+                    
+                    ${company ? `
+                    <div style="margin-bottom: 16px;">
+                        <p style="color: #64748b; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 4px 0;">Organization</p>
+                        <p style="color: #0f172a; font-size: 16px; font-weight: 600; margin: 0;">${company}</p>
+                    </div>
+                    ` : ''}
+                    
+                    ${message ? `
+                    <div>
+                        <p style="color: #64748b; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 4px 0;">Request Context</p>
+                        <p style="color: #0f172a; font-size: 14px; line-height: 1.6; margin: 0;">${message}</p>
+                    </div>
+                    ` : ''}
+                </div>
+                
+                <div style="text-align: center; margin-bottom: 32px;">
+                    <a href="mailto:${email}?subject=Welcome%20to%20Recruit-AI%20Waitlist" style="display: inline-block; background-color: #0f172a; color: #ffffff; padding: 16px 32px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;">Acknowledge Requester</a>
+                </div>
+                
+                <hr style="border: 0; border-top: 1px solid #f1f5f9; margin-bottom: 24px;" />
+                
+                <div style="text-align: center;">
+                    <p style="color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">System_v1.1.0_Engine // Neural_Core_Node_7</p>
+                </div>
+            </div>
+        `;
+
+        await emailService.sendEmail(adminEmail, subject, html);
+        
+        // Also send a thank you email to the user
+        const thankYouSubject = `Welcome to Recruit-AI Neural Protocol`;
+        const thankYouHtml = `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #f1f5f9; border-radius: 24px; background-color: #ffffff;">
+                <div style="margin-bottom: 32px; border-bottom: 2px solid #0ea5e9; padding-bottom: 16px;">
+                    <h1 style="color: #0f172a; margin: 0; font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: -0.025em;">Recruit <span style="color: #0ea5e9;">// AI</span></h1>
+                </div>
+                
+                <h2 style="color: #0f172a; font-size: 20px; font-weight: 800; margin-bottom: 24px;">Hello ${name},</h2>
+                
+                <p style="color: #475569; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+                    We've successfully registered your request for early access to the <strong>Recruit-AI Neural Talent Protocol</strong>.
+                </p>
+                
+                <p style="color: #475569; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+                    Our engine is currently in architecture calibration, merging decentralized talent streams into our autonomous layer. Your position in the node queue has been secured.
+                </p>
+                
+                <div style="background-color: #f0f9ff; border: 1px solid #e0f2fe; border-radius: 12px; padding: 20px; margin-bottom: 32px;">
+                    <p style="color: #0369a1; font-size: 14px; font-weight: 700; margin: 0;">Status: NEURAL_WAITLIST_SYNCED</p>
+                </div>
+                
+                <p style="color: #64748b; font-size: 14px; line-height: 1.6;">
+                    We will notify you once your neural clearance has been approved.
+                </p>
+                
+                <div style="margin-top: 40px; border-top: 1px solid #f1f5f9; padding-top: 24px; text-align: center;">
+                    <p style="color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin: 0;">Automated by Recruit Engineering Works</p>
+                </div>
+            </div>
+        `;
+        
+        await emailService.sendEmail(email, thankYouSubject, thankYouHtml);
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Early access request submitted successfully. Check your email for confirmation.' 
+        });
+    } catch (error: any) {
+        console.error('[EarlyAccess] Error:', error);
+        res.status(500).json({ success: false, message: 'Failed to process request. Please try again later.' });
     }
 };
 

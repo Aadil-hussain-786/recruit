@@ -159,14 +159,24 @@ export const ScrollIndicator = () => {
 };
 
 export default function StoryPhysics() {
+    const [isMobile, setIsMobile] = useState(false);
     const progress = useScrollProgress();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         setMounted(true);
+        // Basic mobile detection
+        const checkMobile = () => {
+            const mobile = window.innerWidth < 768 || 
+                          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            setIsMobile(mobile);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    if (!mounted) return null;
+    if (!mounted || isMobile) return null;
 
     return (
         <>

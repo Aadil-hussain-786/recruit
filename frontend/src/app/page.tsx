@@ -83,9 +83,9 @@ const AdvancedNavbar = () => {
     }, []);
 
     const navItems = [
-        { name: 'Dashboard', href: '/dashboard' },
-        { name: 'Jobs', href: '/jobs' },
-        { name: 'Candidates', href: '/candidates' }
+        { name: 'Dashboard', href: '/coming-soon' },
+        { name: 'Jobs', href: '/coming-soon' },
+        { name: 'Candidates', href: '/coming-soon' }
     ];
 
     return (
@@ -122,10 +122,10 @@ const AdvancedNavbar = () => {
 
                 {/* Actions */}
                 <div className="flex items-center gap-4">
-                    <Link href="/login" className="hidden sm:block text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors">
+                    <Link href="/coming-soon" className="hidden sm:block text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors">
                         Secure_Login
                     </Link>
-                    <Link href="/register" className="hidden xs:block">
+                    <Link href="/coming-soon" className="hidden xs:block">
                         <button className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest px-6 py-3 hover:bg-accent-cyan transition-all flex items-center gap-2 group">
                             Start <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                         </button>
@@ -162,8 +162,8 @@ const AdvancedNavbar = () => {
                                 ))}
                             </div>
                             <div className="h-[1px] bg-slate-100" />
-                            <Link href="/login" className="text-xs font-black uppercase tracking-widest text-slate-900">Login</Link>
-                            <Link href="/register">
+                            <Link href="/coming-soon" className="text-xs font-black uppercase tracking-widest text-slate-900">Login</Link>
+                            <Link href="/coming-soon">
                                 <button className="w-full bg-accent-cyan text-white text-[10px] font-black uppercase tracking-widest py-4 rounded-xl shadow-lg">
                                     Initialize Protocol
                                 </button>
@@ -252,7 +252,7 @@ export default function Home() {
                             transition={{ delay: 2, duration: 1 }}
                             className="flex flex-col sm:flex-row items-center justify-center gap-12 mt-8"
                         >
-                            <Link href="/register">
+                            <Link href="/coming-soon">
                                 <motion.button 
                                     className="bg-slate-900 text-white text-[12px] font-black uppercase tracking-[0.3em] px-14 py-7 hover:bg-accent-cyan transition-all shadow-2xl flex items-center gap-4 group"
                                     whileHover={{ scale: 1.05 }}
@@ -261,7 +261,7 @@ export default function Home() {
                                     Launch Protocol <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
                                 </motion.button>
                             </Link>
-                            <Link href="/about" className="group flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-slate-900 transition-colors">
+                            <Link href="/coming-soon" className="group flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-slate-900 transition-colors">
                                 <span className="w-10 h-[1px] bg-slate-200 group-hover:w-16 transition-all" /> SYSTEM_WHITEPAPER
                             </Link>
                         </motion.div>

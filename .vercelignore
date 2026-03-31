@@ -1,0 +1,26 @@
+# Root .vercelignore to speed up deployments by excluding heavy and unnecessary files
+node_modules/
+backend/
+.next/
+out/
+build/
+dist/
+.env*
+*.log
+*.tmp
+.DS_Store
+*.zip
+*.pdf
+*.mp4
+*.xlsx
+.git/
+.vercel/
+**/node_modules/
+**/.next/
+RESTART_INSTRUCTIONS.md
+commit-pdf-fix.*
+start-app.*
+logo.png
+LICENSE
+README.md
+candidateProfileService.ts

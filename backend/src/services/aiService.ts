@@ -102,6 +102,7 @@ REQUIRED FIELDS:
 - noticePeriod (string or null)
 - location: { city, country }
 - linkedInUrl (string or null — extract if present)
+- xAccount (string or null — extract Twitter/X handle if present)
 - education: array of { degree, institution, year, field }
 - certifications: array of strings
 - languages: array of strings (spoken/written languages)
