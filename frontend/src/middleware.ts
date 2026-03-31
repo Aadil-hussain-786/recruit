@@ -5,7 +5,16 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // 1. Define allowed paths (Whitelisted)
+    // 0. ALLOW LOCAL DEVELOPMENT (Bypass restricted access for dev work)
+    const isLocalhost = 
+        request.nextUrl.hostname === 'localhost' || 
+        request.nextUrl.hostname === '127.0.0.1';
+
+    if (isLocalhost) {
+        return NextResponse.next();
+    }
+
+    // 1. Define allowed paths (Whitelisted for Production)
     const isAllowed = 
         pathname === '/' ||                          // Homepage
         pathname === '/coming-soon' ||                // Target placeholder
@@ -17,7 +26,7 @@ export function middleware(request: NextRequest) {
         pathname.includes('.jpg') ||
         pathname.includes('.svg');
 
-    // 2. Redirect all other traffic to Coming Soon
+    // 2. Redirect all other traffic to Coming Soon (In Production Only)
     if (!isAllowed) {
         return NextResponse.redirect(new URL('/coming-soon', request.url));
     }
