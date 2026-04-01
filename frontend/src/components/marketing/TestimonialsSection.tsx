@@ -9,19 +9,7 @@ const testimonials = [
         quote: "Recruit AI transformed our engineering pipeline. We found three lead engineers in half the time it usually takes. The precision is unmatched.",
         name: "Marcus Thorne",
         role: "CTO, Nexus Corp",
-        image: "/testimonial_cto_male.png"
-    },
-    {
-        quote: "The bias-free protocol is a game changer. We're seeing a much more diverse and highly skilled candidate pool than ever before.",
-        name: "Elena Vance",
-        role: "VP of Engineering, Aether Systems",
-        image: "/testimonial_vpe_female.png"
-    },
-    {
-        quote: "Autonomous talent discovery is the future. RAI doesn't just surface files; it surfaces matches that actually last.",
-        name: "Dr. Aris Thorne",
-        role: "Head of Talent, Global Mesh",
-        image: "/testimonial_vpe_female.png" // Reusing for now or using a placeholder
+        image: "/public/unnamed.jpg"
     }
 ];
 
