@@ -20,4 +20,3 @@ frontend/.next/
 Videos/
 .vercel
 .env*.local
-backend/
