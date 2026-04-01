@@ -9,7 +9,7 @@ const testimonials = [
         quote: "Recruit AI transformed our engineering pipeline. We found three lead engineers in half the time it usually takes. The precision is unmatched.",
         name: "Dr Om Prakash Sahu",
         role: "CEO | Founder of Paylift pvt ltd",
-        image: "frontend/public/unnamed.jpg"
+        image: "unnamed.jpg"
     }
 ];
 
