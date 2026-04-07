@@ -53,13 +53,7 @@ export default function TestimonialsSection() {
                                     "{t.quote}"
                                 </p>
                                 <div className="mt-auto flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-accent-cyan/20">
-                                         <img 
-                                            src={t.image} 
-                                            alt={t.name}
-                                            className="w-full h-full object-cover"
-                                         />
-                                    </div>
+                                    
                                     <div>
                                         <h4 className="font-bold text-slate-900 leading-none mb-1 uppercase tracking-tight">{t.name}</h4>
                                         <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">{t.role}</p>
