@@ -2,14 +2,14 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import Image from "next/image";
+
 
 const testimonials = [
     {
         quote: "Recruit AI transformed our engineering pipeline. We found three lead engineers in half the time it usually takes. The precision is unmatched.",
         name: "Dr Om Prakash Sahu",
         role: "CEO | Founder of Paylift pvt ltd",
-        image: "frontend/src/components/marketing/unnamed.jpg"
+        
     }
 ];
 
