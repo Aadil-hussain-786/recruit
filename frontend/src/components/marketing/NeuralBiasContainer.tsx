@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { Brain, Target, Zap, Waves, Cpu, Workflow } from "lucide-react";
 import Tilt from "@/components/ui/Tilt";
-import SkillNeuralAnimation from "./SkillNeuralAnimation";
 
 export default function NeuralBiasContainer() {
   return (
@@ -26,7 +25,7 @@ export default function NeuralBiasContainer() {
 
         {/* Live Animation Section */}
         <div className="mb-24">
-          <SkillNeuralAnimation />
+          
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">

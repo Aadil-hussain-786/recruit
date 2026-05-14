@@ -9,9 +9,10 @@ import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
-    { name: "Dashboard", href: "/coming-soon" },
-    { name: "Jobs", href: "/coming-soon" },
-    { name: "Candidates", href: "/coming-soon" },
+    { name: "Dashboard", href: "/dashboard" },
+    { name: "Jobs", href: "/jobs" },
+    { name: "Candidates", href: "/candidates" },
+    { name: "Discovery", href: "/talent-discovery" },
 ];
 
 export default function Navbar() {
@@ -89,10 +90,10 @@ export default function Navbar() {
                 <div className="flex items-center gap-4">
                     {!user ? (
                         <>
-                            <Link href="/coming-soon" className="hidden sm:block text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors">
+                            <Link href="/login" className="hidden sm:block text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors">
                                 Secure_Login
                             </Link>
-                            <Link href="/coming-soon" className="hidden xs:block">
+                            <Link href="/register" className="hidden xs:block">
                                 <button className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest px-6 py-3 hover:bg-accent-cyan transition-all flex items-center gap-2 group">
                                     Start <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                                 </button>
@@ -145,8 +146,8 @@ export default function Navbar() {
                             <div className="h-[1px] bg-slate-100" />
                             {!user ? (
                                 <>
-                                    <Link onClick={() => setMobileMenuOpen(false)} href="/coming-soon" className="text-xs font-black uppercase tracking-widest text-slate-900">Secure_Login</Link>
-                                    <Link onClick={() => setMobileMenuOpen(false)} href="/coming-soon">
+                                    <Link onClick={() => setMobileMenuOpen(false)} href="/login" className="text-xs font-black uppercase tracking-widest text-slate-900">Secure_Login</Link>
+                                    <Link onClick={() => setMobileMenuOpen(false)} href="/register">
                                         <button className="w-full bg-accent-cyan text-white text-[10px] font-black uppercase tracking-widest py-4 rounded-xl shadow-lg">
                                             Start
                                         </button>

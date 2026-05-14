@@ -4,6 +4,11 @@ import Job from '../models/Job';
 import { aiService } from '../services/aiService';
 import { resumeUploadService } from '../services/resumeUpload/resumeUploadService';
 import { talentDiscoveryService } from '../services/talentDiscoveryService';
+import multer from 'multer';
+import * as XLSX from 'xlsx';
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 const router = Router();
 
@@ -133,10 +138,10 @@ router.post(
   protect,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { jobId, modelId, lookalikeCandidate } = req.body;
+      const { jobId, modelId, lookalikeCandidate, customSearch } = req.body;
       const organizationId = (req as any).user.organizationId as string;
 
-      console.log(`[analysis/discover-talent] Request for Job: ${jobId}, Org: ${organizationId}, Model: ${modelId}`);
+      console.log(`[analysis/discover-talent] Request for Job: ${jobId}, Org: ${organizationId}, Model: ${modelId}, Custom Search: ${customSearch}`);
 
       if (!jobId) {
         return res.status(400).json({ success: false, message: 'jobId is required' });
@@ -154,7 +159,7 @@ router.post(
         candidates = await talentDiscoveryService.findSimilarCandidates(lookalikeCandidate, modelId);
       } else {
         console.log(`[analysis/discover-talent] Initiating discovery for: ${job.title} using model ${modelId}`);
-        candidates = await talentDiscoveryService.discoverCandidates(job.description, modelId);
+        candidates = await talentDiscoveryService.discoverCandidates(job.description, modelId, customSearch);
       }
 
       console.log(`[analysis/discover-talent] Discovery successful. Found ${candidates.length} candidates.`);
@@ -175,6 +180,88 @@ router.post(
       }
       
       next(error);
+    }
+  }
+);
+
+/**
+ * POST /api/analysis/import-excel
+ * Import candidates from an external Excel file
+ */
+router.post(
+  '/import-excel',
+  protect,
+  upload.single('file'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No file uploaded' });
+      }
+
+      const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
+
+      // Exhaustive Fuzzy Key Matching Logic
+      const candidates = jsonData.map((row, index) => {
+        const keys = Object.keys(row);
+        const normalized: any = {};
+        keys.forEach(key => {
+          const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+          normalized[cleanKey] = row[key];
+        });
+
+        // Debug: Log normalized keys to help identify structure if it fails
+        if (index === 0) console.log('[ExcelImport] First Row Clean Keys:', Object.keys(normalized));
+
+        // 1. MATCH NAME (First/Last/Full)
+        const rawName = normalized.name || normalized.candidatename || normalized.candidate || normalized.fullname || normalized.user || normalized.first || normalized.firstname || 'Unknown';
+        const firstName = normalized.firstname || row.FirstName || row.Name?.split(' ')[0] || rawName.split(' ')[0];
+        const lastName = normalized.lastname || row.LastName || (rawName.split(' ').length > 1 ? rawName.split(' ').slice(1).join(' ') : '');
+        
+        // 2. MATCH EMAIL (Broad)
+        const email = normalized.email || normalized.emailid || normalized.emailaddress || normalized.mail || normalized.mailid || normalized.candidatemail || (normalized.contact?.toString().includes('@') ? normalized.contact : 'Not Provided');
+        
+        // 3. MATCH PHONE (Broad)
+        const phone = normalized.phone || normalized.phonenumber || normalized.contact || normalized.contactno || normalized.mob || normalized.mobile || normalized.ph || normalized.phno || normalized.cell || normalized.telephone || normalized.number || normalized.mobilenumber || normalized.mobilebasic || row['Phone Number'] || row['Ph No.'] || 'Not Provided';
+        
+        // 4. MATCH LOCATION
+        const location = normalized.location || normalized.locationbasic || normalized.city || normalized.country || normalized.address || normalized.currentlocation || normalized.residence || normalized.town || 'Not Specified';
+        
+        // 5. MATCH SKILLS (Ultra-Broad)
+        let skills: string[] = [];
+        const rawSkills = normalized.skills || normalized.expertise || normalized.technologies || normalized.stack || normalized.knownskills || normalized.expertisearea || normalized.techstack || normalized.languages || normalized.projects || normalized.experience;
+        if (rawSkills) {
+          if (typeof rawSkills === 'string') {
+            skills = rawSkills.split(/[,;|]/).map((s: string) => s.trim()).filter(Boolean);
+          } else if (Array.isArray(rawSkills)) {
+            skills = rawSkills.filter(s => !!s);
+          }
+        }
+
+        return {
+          id: `excel-${Date.now()}-${index}`,
+          firstName,
+          lastName,
+          email,
+          phone,
+          location,
+          skills: skills.length > 0 ? skills : ["General Expertise"],
+          source: 'Excel File Import',
+          matchScore: 0,
+          isExternal: true
+        };
+      });
+
+      res.status(200).json({
+        success: true,
+        count: candidates.length,
+        data: candidates
+      });
+    } catch (error: any) {
+      console.error('[analysis/import-excel] Error:', error);
+      res.status(500).json({ success: false, message: 'Failed to process Excel file' });
     }
   }
 );

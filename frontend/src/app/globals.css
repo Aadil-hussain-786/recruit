@@ -2,24 +2,24 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #0f172a;
-  --accent-cyan: #0ea5e9;
-  --accent-purple: #8b5cf6;
-  --accent-green: #10b981;
-  --muted: #f8fafc;
-  --border: rgba(15, 23, 42, 0.08);
+  --foreground: #0a0a0a;
+  --accent-cyan: #0a0a0a;
+  --accent-purple: #404040;
+  --accent-green: #606060;
+  --muted: #f5f5f5;
+  --border: rgba(10, 10, 10, 0.08);
   --glass-bg: rgba(255, 255, 255, 0.6);
-  --glass-border: rgba(15, 23, 42, 0.05);
+  --glass-border: rgba(10, 10, 10, 0.05);
 }
 
 /* Force light mode variables for now as per user request */
 .dark {
   --background: #fdfdfd;
-  --foreground: #0f172a;
-  --muted: #f1f5f9;
-  --border: rgba(15, 23, 42, 0.1);
+  --foreground: #0a0a0a;
+  --muted: #f0f0f0;
+  --border: rgba(10, 10, 10, 0.1);
   --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(15, 23, 42, 0.08);
+  --glass-border: rgba(10, 10, 10, 0.08);
 }
 
 @theme inline {
@@ -41,8 +41,8 @@
   }
 
   @keyframes glow {
-    from { box-shadow: 0 0 5px rgba(14, 165, 233, 0.2); }
-    to { box-shadow: 0 0 20px rgba(14, 165, 233, 0.4); }
+    from { box-shadow: 0 0 5px rgba(10, 10, 10, 0.1); }
+    to { box-shadow: 0 0 20px rgba(10, 10, 10, 0.2); }
   }
 }
 
@@ -93,7 +93,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom Scrollbar - Cleaner for Light Mode */
+/* Custom Scrollbar - Clean BW */
 ::-webkit-scrollbar {
   width: 4px;
 }
@@ -103,7 +103,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(14, 165, 233, 0.2);
+  background: rgba(10, 10, 10, 0.15);
   border-radius: 10px;
 }
 
@@ -126,11 +126,11 @@ body {
 }
 
 .glow-text {
-  text-shadow: 0 0 15px rgba(14, 165, 233, 0.3);
+  text-shadow: 0 0 15px rgba(10, 10, 10, 0.15);
 }
 
 .cyan-gradient {
-  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  background: linear-gradient(135deg, #0a0a0a, #404040);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -144,6 +144,22 @@ body {
 .bg-grid {
   background-size: 40px 40px;
   background-image: 
-    linear-gradient(to right, rgba(15, 23, 42, 0.08) 1.5px, transparent 1.5px),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.08) 1.5px, transparent 1.5px);
+    linear-gradient(to right, rgba(10, 10, 10, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(10, 10, 10, 0.06) 1px, transparent 1px);
+}
+
+/* Signature Animation Styles */
+@keyframes signatureDraw {
+  from {
+    stroke-dashoffset: var(--path-length, 1000);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.signature-path {
+  stroke-dasharray: var(--path-length, 1000);
+  stroke-dashoffset: var(--path-length, 1000);
+  animation: signatureDraw var(--draw-duration, 2.5s) cubic-bezier(0.65, 0, 0.35, 1) var(--draw-delay, 0s) forwards;
 }

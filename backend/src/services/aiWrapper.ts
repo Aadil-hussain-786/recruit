@@ -13,14 +13,18 @@ const SERPER_URL = 'https://google.serper.dev/search';
  * Perform OSINT search via Serper (Keep this as it's a search utility, not a model provider)
  */
 export async function searchWeb(query: string) {
-    if (!SERPER_API_KEY) return null;
+    if (!SERPER_API_KEY) {
+        console.warn('[SearchWeb] Missing SERPER_API_KEY in .env');
+        return null;
+    }
     try {
+        console.log(`[SearchWeb] Searching OSINT: ${query}`);
         const response = await axios.post(SERPER_URL, { q: query }, {
             headers: { 'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json' }
         });
         return response.data;
-    } catch (error) {
-        console.error('[SearchWeb] Failed:', error);
+    } catch (error: any) {
+        console.error('[SearchWeb] API Error:', error.response?.data || error.message);
         return null;
     }
 }
@@ -30,7 +34,7 @@ export async function searchWeb(query: string) {
  */
 async function callOllama(messages: any[], modelName: string = OLLAMA_MODEL, options: any = {}) {
     try {
-        console.log(`[Ollama] Local Request. Model: ${modelName}`);
+        console.log(`[Ollama] Local Request. Model: ${modelName}. messages: ${messages.length}`);
         const response = await axios.post(
             OLLAMA_URL,
             {
@@ -41,13 +45,16 @@ async function callOllama(messages: any[], modelName: string = OLLAMA_MODEL, opt
             },
             {
                 headers: OLLAMA_API_KEY ? { 'Authorization': `Bearer ${OLLAMA_API_KEY}` } : {},
-                timeout: options.timeout || 30000,
+                timeout: options.timeout || 45000, // Increased timeout for heavy synthesis
             }
         );
 
         return response.data.message.content;
     } catch (error: any) {
-        console.warn(`[Ollama] Local instance failed: ${error.message}`);
+        console.error(`[Ollama] Local instance failed: ${error.message}`);
+        if (error.code === 'ECONNREFUSED') {
+            console.error('[Ollama] IS OLLAMA RUNNING? Please check http://localhost:11434');
+        }
         throw error;
     }
 }

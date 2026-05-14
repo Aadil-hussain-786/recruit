@@ -1,5 +1,5 @@
 import express from 'express';
-import { createScheduleLink, getAvailableSlots, confirmInterview } from '../controllers/interviewController';
+import { createScheduleLink, getAvailableSlots, confirmInterview, downloadCandidateTranscript } from '../controllers/interviewController';
 import { protect } from '../middleware/auth';
 
 const router = express.Router();
@@ -8,5 +8,6 @@ const router = express.Router();
 router.post('/schedule-link', protect, createScheduleLink);
 router.get('/slots/:interviewerId', getAvailableSlots);
 router.post('/confirm', confirmInterview);
+router.get('/transcript/:candidateId', protect, downloadCandidateTranscript);
 
 export default router;

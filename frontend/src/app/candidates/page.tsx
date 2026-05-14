@@ -272,14 +272,18 @@ export default function CandidatesPage() {
                             <tr>
                                 <th className="px-6 py-4 font-semibold">Candidate</th>
                                 <th className="px-6 py-4 font-semibold text-center">Identity Architecture</th>
+                                <th className="px-6 py-4 font-semibold text-center">Neural Quotient</th>
                                 <th className="px-6 py-4 font-semibold text-center">Status</th>
-                                <th className="px-6 py-4 font-semibold">AI Patterns</th>
+                                <th className="px-6 py-4 font-semibold">AI Dimensions</th>
                                 <th className="px-6 py-4 font-semibold text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-200">
-                            {candidates.length > 0 ? candidates.map((candidate) => (
-                                <tr key={candidate._id} className="group hover:bg-slate-50:bg-slate-100/50 transition-colors">
+                            {candidates.length > 0 ? candidates.map((candidate) => {
+                                const avgScore = candidate.patterns ? Math.round((candidate.patterns.technicalAptitude + candidate.patterns.leadershipPotential + candidate.patterns.culturalAlignment) / 3) : 0;
+                                
+                                return (
+                                <tr key={candidate._id} className="group hover:bg-slate-50 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 font-black uppercase">
@@ -302,6 +306,21 @@ export default function CandidatesPage() {
                                         />
                                     </td>
                                     <td className="px-6 py-4 text-center">
+                                        {candidate.patterns ? (
+                                            <div className="inline-flex flex-col items-center">
+                                                <span className={cn(
+                                                    "text-lg font-black leading-none",
+                                                    avgScore >= 70 ? "text-emerald-600" : avgScore >= 40 ? "text-amber-500" : "text-slate-400"
+                                                )}>
+                                                    {avgScore}
+                                                </span>
+                                                <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400 mt-0.5">Quantum NQ</span>
+                                            </div>
+                                        ) : (
+                                            <span className="text-[10px] text-slate-300 font-black uppercase tracking-widest">Pending</span>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
                                         <span className={cn(
                                             "inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider",
                                             candidate.status === "new" ? "bg-blue-50 text-blue-700" :
@@ -322,17 +341,14 @@ export default function CandidatesPage() {
                                                     ].map((p, i) => (
                                                         <div
                                                             key={i}
-                                                            className={cn("h-4 w-4 rounded-full border border-white", p.color)}
+                                                            className={cn("h-3 w-3 rounded-full border border-white", p.color)}
                                                             title={`${p.label}: ${p.val}`}
                                                         />
                                                     ))}
                                                 </div>
-                                                <span className="text-[10px] font-black text-slate-400">
-                                                    {Math.round((candidate.patterns.technicalAptitude + candidate.patterns.leadershipPotential + candidate.patterns.culturalAlignment) / 3)}%
-                                                </span>
                                             </div>
                                         ) : (
-                                            <span className="text-[10px] text-slate-400 italic">No patterns yet</span>
+                                            <span className="text-[10px] text-slate-400 italic">—</span>
                                         )}
                                     </td>
                                     <td className="px-6 py-4 text-right">
@@ -379,9 +395,9 @@ export default function CandidatesPage() {
                                         </div>
                                     </td>
                                 </tr>
-                            )) : (
+                                )}) : (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
                                         No candidates found. Start by adding your first candidate!
                                     </td>
                                 </tr>
@@ -589,12 +605,36 @@ export default function CandidatesPage() {
                                         </div>
                                     )}
 
-                                    <div className="pt-6 border-t border-slate-100 flex justify-end gap-4">
-                                        <Button variant="outline" onClick={() => setShowInsightsModal(false)}>Close</Button>
-                                        <Button className="bg-slate-900 text-white hover:bg-accent-cyan transition-all uppercase tracking-widest text-[10px] font-black" onClick={() => {
-                                            setShowInsightsModal(false);
-                                            setShowConnectDrawer(true);
-                                        }}>Schedule Interview</Button>
+                                    <div className="pt-6 border-t border-slate-100 flex items-center justify-between gap-4">
+                                        <div className="flex items-center gap-2">
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm"
+                                                className="text-[10px] font-black uppercase tracking-widest gap-2"
+                                                onClick={async () => {
+                                                    try {
+                                                        const res = await api.post(`/candidates/${selectedCandidate._id}/re-analyze`);
+                                                        if (res.data.success) {
+                                                            alert('Neural Intelligence Reprocessed Successfully');
+                                                            fetchCandidates();
+                                                            setShowInsightsModal(false);
+                                                        }
+                                                    } catch (err: any) {
+                                                        alert(err.response?.data?.message || 'Failed to refresh analysis');
+                                                    }
+                                                }}
+                                            >
+                                                <Sparkles size={14} className="text-indigo-500" />
+                                                Reprocess Patterns
+                                            </Button>
+                                        </div>
+                                        <div className="flex gap-4">
+                                            <Button variant="outline" onClick={() => setShowInsightsModal(false)}>Close</Button>
+                                            <Button className="bg-slate-900 text-white hover:bg-accent-cyan transition-all uppercase tracking-widest text-[10px] font-black" onClick={() => {
+                                                setShowInsightsModal(false);
+                                                setShowConnectDrawer(true);
+                                            }}>Schedule Interview</Button>
+                                        </div>
                                     </div>
                                 </div>
                             )}

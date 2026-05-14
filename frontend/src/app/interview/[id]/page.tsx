@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import api from '@/lib/api';
+import IntelligenceMindMap from '@/components/talent/IntelligenceMindMap';
 
 interface Message {
     role: 'assistant' | 'user';
@@ -63,12 +64,16 @@ export default function AIInterviewPage() {
     const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
 
     const videoRef = useRef<HTMLVideoElement>(null);
+    const mediaStreamRef = useRef<MediaStream | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
     const recognitionRef = useRef<any>(null);
     const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
     const isMicOnRef = useRef(true);
     const isAIspeakingRef = useRef(false);
     const isTypingRef = useRef(false);
+    const [candidateData, setCandidateData] = useState<any>(null);
+    const [isLoadingIntel, setIsLoadingIntel] = useState(false);
+    
     const interviewStatusRef = useRef<'intro' | 'active' | 'completed'>('intro');
 
     // Sync refs with state
@@ -77,6 +82,26 @@ export default function AIInterviewPage() {
     useEffect(() => { isTypingRef.current = isTyping; }, [isTyping]);
     useEffect(() => { interviewStatusRef.current = interviewStatus; }, [interviewStatus]);
 
+    // Load candidate intelligence
+    useEffect(() => {
+        if (candId) {
+            const fetchIntel = async () => {
+                setIsLoadingIntel(true);
+                try {
+                    const res = await api.get(`/chatbot/candidate/${candId}`);
+                    if (res.data.success) {
+                        setCandidateData(res.data.data);
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch candidate intel:', err);
+                } finally {
+                    setIsLoadingIntel(false);
+                }
+            };
+            fetchIntel();
+        }
+    }, [candId]);
+    
     // Load available voices
     useEffect(() => {
         const loadVoices = () => {
@@ -334,7 +359,8 @@ export default function AIInterviewPage() {
                 message: userMessage,
                 history,
                 applicationId,
-                context: { type: 'interview', stage: 'preliminary' }
+                candidateId: candId,
+                context: { type: 'interview', stage: 'preliminary', candidateId: candId }
             });
 
             const aiResponse = res.data?.data?.response || "I'm processing your answer, but I'm having a momentary connection issue. Could you please clarify your last point?";
@@ -370,13 +396,31 @@ export default function AIInterviewPage() {
     };
 
     useEffect(() => {
-        if (showVideo && videoRef.current) {
+        if (showVideo) {
             navigator.mediaDevices.getUserMedia({ video: true, audio: true })
                 .then(stream => {
+                    mediaStreamRef.current = stream;
                     if (videoRef.current) videoRef.current.srcObject = stream;
                 })
                 .catch(err => console.error("Error accessing camera:", err));
+        } else {
+            // Stop all tracks when video is toggled off
+            if (mediaStreamRef.current) {
+                mediaStreamRef.current.getTracks().forEach(track => track.stop());
+                mediaStreamRef.current = null;
+            }
+            if (videoRef.current) {
+                videoRef.current.srcObject = null;
+            }
         }
+
+        // Cleanup on unmount
+        return () => {
+            if (mediaStreamRef.current) {
+                mediaStreamRef.current.getTracks().forEach(track => track.stop());
+                mediaStreamRef.current = null;
+            }
+        };
     }, [showVideo]);
 
     useEffect(() => {
@@ -441,7 +485,7 @@ export default function AIInterviewPage() {
                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")` }} />
 
                 {interviewStatus === 'intro' ? (
-                    <div className="max-w-2xl w-full px-6 flex flex-col items-center justify-center h-full text-center z-10">
+                    <div className="max-w-2xl w-full px-6 flex flex-col items-center justify-center h-full text-center z-10 overflow-y-auto min-w-[320px]">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -470,12 +514,27 @@ export default function AIInterviewPage() {
                                 ))}
                             </div>
 
+                            <div className="w-full mb-12">
+                                <IntelligenceMindMap 
+                                    data={candidateData?.patterns?.mindMap} 
+                                    className="shadow-[0_0_100px_rgba(99,102,241,0.1)] border-white/10"
+                                />
+                            </div>
+
                             <Button
                                 onClick={startInterview}
                                 variant="premium"
-                                className="bg-white text-black hover:bg-zinc-200 rounded-none px-12 py-8 text-sm font-black tracking-[0.3em] uppercase transition-all hover:scale-105"
+                                className="bg-white text-black hover:bg-zinc-200 rounded-none px-12 py-8 text-sm font-black tracking-[0.3em] uppercase transition-all hover:scale-105 hidden sm:inline-flex"
                             >
                                 Initiate Sequence
+                            </Button>
+                            {/* Mobile-friendly button for smaller screens */}
+                            <Button
+                                onClick={startInterview}
+                                variant="premium"
+                                className="bg-white text-black hover:bg-zinc-200 rounded-none px-6 py-4 text-xs font-black tracking-[0.2em] uppercase transition-all sm:hidden"
+                            >
+                                Start Interview
                             </Button>
                         </motion.div>
                     </div>
@@ -680,17 +739,24 @@ export default function AIInterviewPage() {
                                         </div>
                                     ) : analysis ? (
                                         <>
-                                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                                                 {[
                                                     { label: 'Technical', val: analysis.technicalAptitude },
                                                     { label: 'Leadership', val: analysis.leadershipPotential },
                                                     { label: 'Culture', val: analysis.culturalAlignment },
                                                     { label: 'Creativity', val: analysis.creativity },
-                                                    { label: 'Confidence', val: analysis.confidence }
+                                                    { label: 'Confidence', val: analysis.confidence },
+                                                    { label: 'Communication', val: analysis.communicationSkill },
+                                                    { label: 'Logic', val: analysis.problemSolvingAbility },
+                                                    { label: 'Adaptability', val: analysis.adaptability },
+                                                    { label: 'Growth', val: analysis.growthMindset },
+                                                    { label: 'Domain', val: analysis.domainExpertise },
+                                                    { label: 'Teamwork', val: analysis.teamworkOrientation },
+                                                    { label: 'Self-Aware', val: analysis.selfAwareness }
                                                 ].map((stat, i) => (
-                                                    <div key={i} className="p-4 bg-white/5 border border-white/10 rounded-2xl">
-                                                        <div className="text-2xl font-black mb-1">{stat.val}</div>
-                                                        <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{stat.label}</div>
+                                                    <div key={i} className="p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-colors">
+                                                        <div className="text-xl font-black mb-1">{stat.val}</div>
+                                                        <div className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">{stat.label}</div>
                                                     </div>
                                                 ))}
                                             </div>
@@ -700,9 +766,45 @@ export default function AIInterviewPage() {
                                                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-4 flex items-center gap-2">
                                                         <Sparkles size={14} /> Neural Summary
                                                     </h3>
-                                                    <p className="text-sm text-zinc-400 leading-relaxed italic">
+                                                    <p className="text-sm text-zinc-400 leading-relaxed italic mb-6">
                                                         "{analysis.summary}"
                                                     </p>
+
+                                                    <div className="grid grid-cols-2 gap-4 mb-6">
+                                                        <div className="p-4 bg-black/40 rounded-2xl border border-white/5">
+                                                            <div className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Logic Complexity</div>
+                                                            <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
+                                                                <motion.div 
+                                                                    initial={{ width: 0 }} 
+                                                                    animate={{ width: `${analysis.logicComplexity || 0}%` }} 
+                                                                    className="h-full bg-indigo-500" 
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="p-4 bg-black/40 rounded-2xl border border-white/5">
+                                                            <div className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Info Density</div>
+                                                            <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
+                                                                <motion.div 
+                                                                    initial={{ width: 0 }} 
+                                                                    animate={{ width: `${analysis.informationDensity || 0}%` }} 
+                                                                    className="h-full bg-emerald-500" 
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {Array.isArray(analysis.behavioralThemes) && analysis.behavioralThemes.length > 0 && (
+                                                        <div className="space-y-3">
+                                                            <h4 className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Extracted Themes</h4>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {analysis.behavioralThemes.map((theme: string, i: number) => (
+                                                                    <span key={i} className="px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-[9px] text-indigo-300 font-bold tracking-tight">
+                                                                        {theme}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 {analysis.biasAnalysis && (

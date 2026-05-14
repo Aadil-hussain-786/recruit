@@ -64,6 +64,9 @@ export default function ResumeUploadPage() {
       const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('resume', selectedFile);
+      if (selectedJob?._id) {
+        formData.append('jobDescriptionId', selectedJob._id);
+      }
 
       const response = await api.post('/v1/resumes/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -79,7 +82,8 @@ export default function ResumeUploadPage() {
       setStep('analyze');
       setLoading(false);
     } catch (err: any) {
-      setError(err.message);
+      const serverError = err.response?.data?.error?.message || err.response?.data?.message || err.message;
+      setError(serverError);
       setLoading(false);
     }
   };
@@ -409,11 +413,17 @@ Confidence: ${Math.round(result.confidence * 100)}%
                 <div>
                   <h3 className="text-sm font-semibold text-violet-600 mb-2">Interview Questions</h3>
                   <div className="space-y-2">
-                    {result.interviewQuestions.map((q, i) => (
+                    {result.interviewQuestions.map((q: any, i) => (
                       <div key={i} className="p-3 bg-violet-50 dark:bg-violet-900/20 rounded-lg">
                         <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                          <span className="text-violet-600 mr-1">Q{i + 1}:</span> {q}
+                          <span className="text-violet-600 mr-1">Q{i + 1}:</span> 
+                          {typeof q === 'string' ? q : q.question}
                         </p>
+                        {typeof q !== 'string' && q.idealAnswer && (
+                          <p className="mt-1 text-xs text-zinc-500 italic">
+                            Alt: {q.idealAnswer}
+                          </p>
+                        )}
                       </div>
                     ))}
                   </div>

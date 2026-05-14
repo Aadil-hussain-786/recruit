@@ -122,9 +122,9 @@ export default function CandidateProfilePage() {
                                         <Calendar size={16} className="text-indigo-500" />
                                         Notice: {candidate.noticePeriod}
                                     </div>
-                                    {candidate.resumeLink && (
+                                    {candidate.resumeUrl && (
                                         <div className="flex items-center gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-                                            <a href={candidate.resumeLink} target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:underline">
+                                            <a href={candidate.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:underline">
                                                 View Resume
                                             </a>
                                         </div>

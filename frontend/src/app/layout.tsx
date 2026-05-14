@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
+import { Plus_Jakarta_Sans, Outfit, Great_Vibes } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { CSPostHogProvider } from "@/components/providers/PostHogProvider";
@@ -15,15 +15,22 @@ const outfit = Outfit({
   variable: "--font-outfit",
 });
 
+const greatVibes = Great_Vibes({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-signature",
+});
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export const metadata: Metadata = {
   title: "Recruit AI | Transform Your Hiring Process",
   description: "The modern recruitment platform powered by AI to help you find the best talent effortlessly.",
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
   other: {
     'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-capable': 'yes',
@@ -38,7 +45,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${plusJakarta.variable} ${outfit.variable} font-sans antialiased bg-white text-zinc-900 dark:bg-black dark:text-zinc-50`}>
+      <body className={`${plusJakarta.variable} ${outfit.variable} ${greatVibes.variable} font-sans antialiased bg-white text-zinc-900 dark:bg-black dark:text-zinc-50`}>
         <CSPostHogProvider>
           <AuthProvider>
             <ClientLayout>

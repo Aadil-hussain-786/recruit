@@ -2,7 +2,6 @@
 
 import React, { useRef } from "react";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
-import DNAScene from "./DNAScene";
 import Tilt from "../ui/Tilt";
 
 
@@ -50,7 +49,6 @@ export default function FoundersProtocol() {
           backgroundSize: '100px 100px'
         }} />
       </div>
-      <DNAScene />
 
 
       <div className="mx-auto max-w-6xl px-6 relative z-10">

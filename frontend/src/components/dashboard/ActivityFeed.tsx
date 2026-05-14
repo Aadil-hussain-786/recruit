@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import * as Ably from 'ably';
 import { Terminal, Activity, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -16,45 +15,11 @@ export default function ActivityFeed({ organizationId }: { organizationId: strin
 
     useEffect(() => {
         if (!organizationId) return;
-
-        const ABLY_KEY = process.env.NEXT_PUBLIC_ABLY_API_KEY;
-        if (!ABLY_KEY) return;
-
-        // Verify key format (Ably keys typically have a colon, e.g. appId.keyId:keySecret)
-        // The current key looks like a JWT token which will crash the client
-        if (!ABLY_KEY.includes(':')) {
-            console.warn('[Ably] Invalid API key format detected. Skipping real-time connection to prevent crashes.');
-            return;
-        }
-
-        let ably;
-        let channel;
-
-        try {
-            ably = new Ably.Realtime(ABLY_KEY);
-            channel = ably.channels.get(`org-${organizationId}`);
-
-            ably.connection.on('connected', () => console.log('[Ably] Connected to neural mesh'));
-            ably.connection.on('failed', (err) => console.error('[Ably] Connection failed:', err));
-
-            channel.subscribe('activity', (message) => {
-                setActivities((prev) => [message.data, ...prev].slice(0, 10));
-            });
-        } catch (err) {
-            console.error('[Ably] Initialization failed:', err);
-            return;
-        }
-        return () => {
-            if (!ably || !channel) return;
-            try {
-                channel.unsubscribe();
-                if (ably.connection.state !== 'closed') {
-                    ably.close();
-                }
-            } catch (err) {
-                console.warn('[ActivityFeed] Shutdown error:', err);
-            }
-        };
+        
+        // Ably has been removed. 
+        // This component currently displays static/empty state or can be wired to a new realtime service.
+        console.log('[ActivityFeed] Realtime connection offline (Ably removed).');
+        
     }, [organizationId]);
 
     return (
@@ -89,7 +54,7 @@ export default function ActivityFeed({ organizationId }: { organizationId: strin
                                         <span className="text-[8px] text-zinc-500 uppercase tracking-tighter">{new Date(activity.timestamp).toLocaleTimeString()}</span>
                                     </div>
                                     <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400 font-mono italic">
-                                        {activity.details}
+                                        {activity.details || 'No data protocol recorded.'}
                                     </p>
                                 </div>
                             </motion.div>

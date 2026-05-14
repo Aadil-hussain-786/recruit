@@ -30,6 +30,20 @@ export interface ICandidate extends Document {
     certifications?: string[];
     languages?: string[];
     workPreference?: 'remote' | 'hybrid' | 'onsite' | 'flexible';
+    isOpenToWork?: boolean;
+    willingToRelocate?: boolean;
+    archetype?: string;
+    tenureType?: 'High Velocity' | 'Stable' | 'Legacy' | 'Unknown';
+    marketCalibration?: 'Premium' | 'Aligned' | 'Value' | 'Unknown';
+    interviewQuestions?: {
+        question: string;
+        idealAnswer: string;
+    }[];
+    transcripts?: {
+        content: string;
+        date: Date;
+        type: 'AI_SIMULATION' | 'REAL_INTERVIEW';
+    }[];
     parsedData?: any;
     embedding?: number[];
     patterns?: {
@@ -127,6 +141,28 @@ const CandidateSchema: Schema = new Schema(
             enum: ['remote', 'hybrid', 'onsite', 'flexible'],
             default: 'flexible'
         },
+        isOpenToWork: { type: Boolean, default: false },
+        willingToRelocate: { type: Boolean, default: false },
+        archetype: { type: String, default: 'Standard' },
+        tenureType: { 
+            type: String, 
+            enum: ['High Velocity', 'Stable', 'Legacy', 'Unknown'], 
+            default: 'Unknown' 
+        },
+        marketCalibration: { 
+            type: String, 
+            enum: ['Premium', 'Aligned', 'Value', 'Unknown'], 
+            default: 'Unknown' 
+        },
+        interviewQuestions: [{
+            question: String,
+            idealAnswer: String
+        }],
+        transcripts: [{
+            content: String,
+            date: { type: Date, default: Date.now },
+            type: { type: String, enum: ['AI_SIMULATION', 'REAL_INTERVIEW'], default: 'REAL_INTERVIEW' }
+        }],
         parsedData: Object,
         embedding: { type: [Number], default: [] },
         patterns: {

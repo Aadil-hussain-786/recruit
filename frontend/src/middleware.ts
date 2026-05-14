@@ -27,9 +27,11 @@ export function middleware(request: NextRequest) {
         pathname.includes('.svg');
 
     // 2. Redirect all other traffic to Coming Soon (In Production Only)
+    /* 
     if (!isAllowed) {
         return NextResponse.redirect(new URL('/coming-soon', request.url));
     }
+    */
 
     return NextResponse.next();
 }

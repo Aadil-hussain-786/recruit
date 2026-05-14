@@ -107,6 +107,12 @@ REQUIRED FIELDS:
 - certifications: array of strings
 - languages: array of strings (spoken/written languages)
 - workPreference: "remote" | "hybrid" | "onsite" | "flexible" (infer from context)
+- isOpenToWork: boolean (True if mentions looking for opportunities, open to work, or job seeking)
+- willingToRelocate: boolean (True if mentions willing to relocate or open to other locations)
+- archetype: string (Functional archetype: "Founding Engineer", "System Architect", "Product-Centric", "Legacy Builder")
+- tenureType: "High Velocity" | "Stable" | "Legacy" | "Unknown" (Based on career progression speed and duration)
+- marketCalibration: "Premium" | "Aligned" | "Value" | "Unknown" (Inferred from experience/salary level, use "Unknown" if not enough context)
+- interviewQuestions: array of { question, idealAnswer } (3 behavioral questions for recruiters)
 
 AI EVALUATION SCORES (0-100, based on evidence in resume):
 - technicalAptitude: depth and breadth of technical skills
@@ -156,7 +162,11 @@ ${text}`;
                     teamworkOrientation: parsed.teamworkOrientation || 0,
                     growthMindset: parsed.growthMindset || 0,
                     notes: parsed.patternNotes || []
-                }
+                },
+                archetype: parsed.archetype || 'Standard Candidate',
+                tenureType: parsed.tenureType || 'Unknown',
+                marketCalibration: parsed.marketCalibration || 'Unknown',
+                interviewQuestions: parsed.interviewQuestions || []
             };
 
             // High-impact push 1: Vector Indexing
@@ -176,6 +186,17 @@ ${text}`;
                 realtimeService.logActivity('global', 'Intelligence Mined', `Parsed skills for ${result.firstName || 'Candidate'}: ${skillsForLog}...`);
             } catch (err) {
                 console.warn('[aiService] Vector indexing or realtime log failed:', err);
+            }
+
+            // High-impact phone extraction fallback
+            if (!result.phone || result.phone.toLowerCase().includes('pending') || result.phone.includes('1234567890')) {
+                console.log('[aiService] Dummy phone detected. Using regex fallback...');
+                const phoneRegex = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g;
+                const matches = text.match(phoneRegex);
+                if (matches && matches.length > 0) {
+                    result.phone = matches[0];
+                    console.log(`[aiService] Regex fallback found: ${result.phone}`);
+                }
             }
 
             return result;
