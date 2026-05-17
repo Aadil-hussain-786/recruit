@@ -14,6 +14,7 @@ pnpm-lock.yaml
 
 # Project specific
 backend/data/
+backend
 backend/node_modules/
 frontend/node_modules/
 frontend/.next/

@@ -18,7 +18,7 @@
   "dependencies": {
     "@prisma/client": "^6.0.0",
     "@upstash/vector": "^1.2.3",
-    "ably": "^2.20.0",
+    "ably": "^2.21.0",
     "axios": "^1.13.3",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.3",

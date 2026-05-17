@@ -324,3 +324,6 @@ export const bulkInviteCandidates = async (req: Request, res: Response) => {
         res.status(500).json({ success: false, message: 'Bulk processing failed', error: error.message });
     }
 };
+res.status(500).json({ success: false, message: 'Bulk processing failed', error: error.message });
+    }
+};

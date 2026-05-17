@@ -6,11 +6,16 @@ dotenv.config();
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434/api/chat';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3';
 const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY || ''; // Usually empty for local Ollama
+
+const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
+const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
+
 const SERPER_API_KEY = process.env.SERPER_API_KEY || '';
 const SERPER_URL = 'https://google.serper.dev/search';
 
 /**
- * Perform OSINT search via Serper (Keep this as it's a search utility, not a model provider)
+ * Perform OSINT search via Serper
  */
 export async function searchWeb(query: string) {
     if (!SERPER_API_KEY) {
@@ -30,7 +35,40 @@ export async function searchWeb(query: string) {
 }
 
 /**
- * Direct call to local Ollama instance
+ * Direct call to Groq Cloud (Primary)
+ */
+async function callGroq(messages: any[], modelName: string = GROQ_MODEL, options: any = {}) {
+    if (!GROQ_API_KEY) throw new Error('MISSING_GROQ_KEY');
+
+    try {
+        console.log(`[Groq] Requesting ${modelName}...`);
+        const response = await axios.post(
+            GROQ_URL,
+            {
+                model: modelName,
+                messages: messages,
+                temperature: options.temperature ?? 0.7,
+                max_tokens: options.max_tokens || 4096,
+                stream: false
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${GROQ_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                timeout: options.timeout || 30000,
+            }
+        );
+
+        return response.data.choices[0].message.content;
+    } catch (error: any) {
+        console.error(`[Groq] API failed: ${error.response?.data?.error?.message || error.message}`);
+        throw error;
+    }
+}
+
+/**
+ * Direct call to local Ollama instance (Fallback)
  */
 async function callOllama(messages: any[], modelName: string = OLLAMA_MODEL, options: any = {}) {
     try {
@@ -45,31 +83,37 @@ async function callOllama(messages: any[], modelName: string = OLLAMA_MODEL, opt
             },
             {
                 headers: OLLAMA_API_KEY ? { 'Authorization': `Bearer ${OLLAMA_API_KEY}` } : {},
-                timeout: options.timeout || 45000, // Increased timeout for heavy synthesis
+                timeout: options.timeout || 45000,
             }
         );
 
         return response.data.message.content;
     } catch (error: any) {
         console.error(`[Ollama] Local instance failed: ${error.message}`);
-        if (error.code === 'ECONNREFUSED') {
-            console.error('[Ollama] IS OLLAMA RUNNING? Please check http://localhost:11434');
-        }
         throw error;
     }
 }
 
 /**
- * Unified AI call utility. Now strictly uses ONLY local Ollama as requested.
- * We keep the name 'callOpenRouter' to avoid breaking existing code.
+ * Unified AI call utility. 
+ * Priorities: 1. Groq (Fastest/Reliable) 2. Ollama (Local)
  */
-export async function callOpenRouter(messages: any[], model: string = 'meta-llama/llama-3.3-70b-instruct', options: any = {}) {
-    // Strictly use Only Local Ollama
+export async function callOpenRouter(messages: any[], model: string = '', options: any = {}) {
+    // 1. Try Groq if key exists
+    if (GROQ_API_KEY) {
+        try {
+            return await callGroq(messages, model || GROQ_MODEL, options);
+        } catch (error: any) {
+            console.warn('[AI Wrapper] Groq failed, falling back to Ollama...');
+        }
+    }
+
+    // 2. Fallback to Ollama
     try {
         return await callOllama(messages, OLLAMA_MODEL, options);
     } catch (error: any) {
-        console.error('[Ollama] Failed to process request:', error.message);
-        throw new Error(`OLLAMA_FAILURE: ${error.message}`);
+        console.error('[AI Wrapper] All AI providers failed.');
+        throw new Error(`AI_FAILURE: ${error.message}`);
     }
 }
 
@@ -77,7 +121,6 @@ export async function callOpenRouter(messages: any[], model: string = 'meta-llam
  * Shared utility for local embeddings
  */
 export async function getEmbeddings(text: string, model: string = 'nomic-embed-text') {
-    // Only use local Ollama embeddings as requested
     try {
         const response = await axios.post(
             'http://localhost:11434/api/embeddings',
@@ -87,6 +130,8 @@ export async function getEmbeddings(text: string, model: string = 'nomic-embed-t
         return response.data.embedding;
     } catch (error: any) {
         console.error('[Ollama] Embedding failed:', error.message);
-        throw new Error(`EMBEDDING_FAILURE: ${error.message}`);
+        // If local embedding fails, we return empty to let the caller handle it (e.g. skip vector search)
+        return [];
     }
 }
+
